@@ -31,6 +31,7 @@ Moni 是一个轻量级的 macOS 菜单栏应用，专门用于实时监控 AI �
 ### 服务支持
 
 #### AI 服务
+
 - **Claude** (api.anthropic.com)
 - **Gemini** (generativelanguage.googleapis.com)
 - **DeepSeek** (api.deepseek.com)
@@ -39,17 +40,20 @@ Moni 是一个轻量级的 macOS 菜单栏应用，专门用于实时监控 AI �
 - **Kimi** (api.moonshot.cn)
 
 #### IDE 服务
+
 - **Cursor** (api.cursor.sh)
 - **Visual Studio Code** (marketplace.visualstudio.com)
 - **Windsurf** (api.windsurf.sh)
 
 #### 开发工具
+
 - **Homebrew** (formulae.brew.sh)
 - **NPM** (registry.npmjs.org)
 - **PyPI** (pypi.org)
 - **Maven** (repo1.maven.org)
 
 #### 网络服务
+
 - **Docker Hub** (registry-1.docker.io)
 
 ## 快速开始
@@ -218,7 +222,7 @@ make test              # 运行测试
 
 ## 联系方式
 
-- 项目主页：https://github.com/xdfnet/Moni
+- 项目主页：<https://github.com/xdfnet/Moni>
 - 问题反馈：提交 GitHub Issue
 - 功能建议：参与项目讨论
 
