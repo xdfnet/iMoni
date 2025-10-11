@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-iMoni 是一个 macOS 菜单栏应用，用于实时监控 AI 服务的网络延迟和系统网络流量。采用 SwiftUI + Swift 5.0 开发，支持多种监控模式和可配置的监控间隔。项目经过 v1.11 版本的代码结构优化，统一使用工具函数库，提高了代码质量和可维护性。
+iMoni 是一个 macOS 菜单栏应用，用于实时监控 AI 服务的网络延迟和系统网络流量。采用 SwiftUI + Swift 5.0 开发，支持多种监控模式和可配置的监控间隔。项目经过 v1.17 版本的重大更新，完成项目重命名和构建系统优化，提高了代码质量和可维护性。
 
 ## 常用开发命令
 
@@ -308,12 +308,17 @@ enum NetworkError: Error, LocalizedError {
 - **VSCode**: 配置为使用 zsh 终端，统一开发体验
 - 自动识别 Homebrew 安装的 Python 3.13.7
 
-## 最新更新 (v1.11)
+## 最新更新 (v1.17)
 
-### 服务分类优化
-- 新增 IDE 服务分类：支持 Cursor、Visual Studio Code、Windsurf
-- 新增 Qwen AI 服务支持：扩展阿里云 AI 模型监控
-- 服务端点验证：改进服务端点的有效性和可用性检查
+### 项目重命名
+- **品牌统一**：项目名称从 Moni 改为 iMoni，统一品牌标识
+- **仓库迁移**：GitHub 仓库地址更新为 https://github.com/xdfnet/iMoni.git
+- **文档同步**：所有文档和配置文件中的项目名称已同步更新
+
+### 构建系统优化
+- **Makefile 修复**：修复版本更新功能的路径配置问题
+- **版本管理**：改进版本号解析逻辑，增强边界情况处理
+- **构建流程**：优化构建步骤，提高构建稳定性和兼容性
 
 ### 代码结构优化
 - 删除了重复和未使用的函数，提高代码质量

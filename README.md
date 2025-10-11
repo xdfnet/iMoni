@@ -2,7 +2,7 @@
 
 [![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)](https://swift.org)
 [![macOS](https://img.shields.io/badge/macOS-15.0+-blue.svg)](https://developer.apple.com/macos/)
-[![Version](https://img.shields.io/badge/Version-1.11-green.svg)](https://github.com/xdfnet/Moni)
+[![Version](https://img.shields.io/badge/Version-1.17-green.svg)](https://github.com/xdfnet/iMoni)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 项目简介
@@ -18,7 +18,7 @@ iMoni 是一个轻量级的 macOS 菜单栏应用，专门用于实时监控 AI 
 - **菜单栏集成**：轻量级设计，不占用桌面空间
 - **可配置监控间隔**：支持 0.5s、1s、2s、5s 多种频率
 
-### 最新功能 (v1.11)
+### 最新功能 (v1.17)
 
 - **代码结构优化**：删除了重复和未使用的函数，提高代码质量
 - **统一工具函数库**：所有格式化、时间处理、调试都使用 `Utilities` 工具库
@@ -194,6 +194,7 @@ make test              # 运行测试
 
 ## 版本历史
 
+- v1.17 (2025-10-11): 项目重命名为 iMoni，修复 Makefile 版本更新功能
 - v1.11 (2025-09-01): 服务分类优化，添加 IDE Services 支持
 - v1.10 (2025-08-31): 性能优化和 bug 修复
 - v1.09 (2025-08-30): 网络监控稳定性改进
