@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Moni 是一个 macOS 菜单栏应用，用于实时监控 AI 服务的网络延迟和系统网络流量。采用 SwiftUI + Swift 5.0 开发，支持多种监控模式和可配置的监控间隔。项目经过 v1.07 版本的代码结构优化，统一使用工具函数库，提高了代码质量和可维护性。
+iMoni 是一个 macOS 菜单栏应用，用于实时监控 AI 服务的网络延迟和系统网络流量。采用 SwiftUI + Swift 5.0 开发，支持多种监控模式和可配置的监控间隔。项目经过 v1.11 版本的代码结构优化，统一使用工具函数库，提高了代码质量和可维护性。
 
 ## 常用开发命令
 
@@ -35,13 +35,13 @@ make quality-check
 ### 开发工具
 ```bash
 # 打开 Xcode 项目
-open Moni.xcodeproj
+open iMoni.xcodeproj
 
 # 构建（Xcode）
-xcodebuild -project Moni.xcodeproj -scheme Moni -configuration Debug build
+xcodebuild -project iMoni.xcodeproj -scheme iMoni -configuration Debug build
 
 # 发布构建
-xcodebuild -project Moni.xcodeproj -scheme Moni -configuration Release build
+xcodebuild -project iMoni.xcodeproj -scheme iMoni -configuration Release build
 ```
 
 ## 项目架构
@@ -235,7 +235,13 @@ enum NetworkError: Error, LocalizedError {
 - **Gemini** (generativelanguage.googleapis.com) - Google 的 AI 模型
 - **DeepSeek** (api.deepseek.com) - DeepSeek 的 AI 服务
 - **GLM** (open.bigmodel.cn) - 智谱 AI 的 GLM 模型
+- **Qwen** (dashscope.aliyuncs.com) - 阿里云的 AI 模型
 - **Kimi** (api.moonshot.cn) - 月之暗面的 AI 助手
+
+#### IDE 服务
+- **Cursor** (api.cursor.sh) - AI 编程工具中转服务
+- **Visual Studio Code** (marketplace.visualstudio.com) - 微软的代码编辑器
+- **Windsurf** (api.windsurf.sh) - Web 集成开发环境
 
 #### 开发工具
 - **Homebrew** (formulae.brew.sh) - macOS 包管理器
@@ -245,7 +251,6 @@ enum NetworkError: Error, LocalizedError {
 
 #### 网络服务
 - **Docker Hub** (registry-1.docker.io) - 容器镜像仓库
-- **Cursor** (api.cursor.sh) - AI 编程工具中转服务
 
 ## 扩展开发
 
@@ -281,8 +286,15 @@ enum NetworkError: Error, LocalizedError {
 ### 常见问题
 - 编译错误：检查 Swift 版本兼容性
 - 内存泄漏：使用 Instruments 工具检测
-- 构建问题：清理构建文件后重试
+- 构建问题：清理构建文件后重试 (`make clean`)
 - 环境变量：确保 Homebrew 环境正确配置
+- 网络权限：系统偏好设置 → 安全性与隐私 → 网络，确保应用有网络访问权限
+
+### 测试
+虽然没有传统的单元测试框架，但可以通过以下方式进行验证：
+- 构建验证：`make build` 确保项目能正常构建
+- 代码质量检查：`make quality-check` 运行自动化检查
+- 手动测试：应用启动后验证菜单栏功能和监控状态
 
 ## 环境配置
 
@@ -296,7 +308,12 @@ enum NetworkError: Error, LocalizedError {
 - **VSCode**: 配置为使用 zsh 终端，统一开发体验
 - 自动识别 Homebrew 安装的 Python 3.13.7
 
-## 最新更新 (v1.07)
+## 最新更新 (v1.11)
+
+### 服务分类优化
+- 新增 IDE 服务分类：支持 Cursor、Visual Studio Code、Windsurf
+- 新增 Qwen AI 服务支持：扩展阿里云 AI 模型监控
+- 服务端点验证：改进服务端点的有效性和可用性检查
 
 ### 代码结构优化
 - 删除了重复和未使用的函数，提高代码质量

@@ -1,4 +1,4 @@
-# Moni - AI 服务延迟监控工具
+# iMoni - AI 服务延迟监控工具
 
 [![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)](https://swift.org)
 [![macOS](https://img.shields.io/badge/macOS-15.0+-blue.svg)](https://developer.apple.com/macos/)
@@ -7,7 +7,7 @@
 
 ## 项目简介
 
-Moni 是一个轻量级的 macOS 菜单栏应用，专门用于实时监控 AI 服务的网络延迟和系统网络流量。通过优化的代码结构、统一的工具函数库和现代化的架构设计，为开发者提供可靠的网络监控体验。
+iMoni 是一个轻量级的 macOS 菜单栏应用，专门用于实时监控 AI 服务的网络延迟和系统网络流量。通过优化的代码结构、统一的工具函数库和现代化的架构设计，为开发者提供可靠的网络监控体验。
 
 ## 主要特性
 
@@ -72,8 +72,8 @@ Moni 是一个轻量级的 macOS 菜单栏应用，专门用于实时监控 AI �
 
 ```bash
 # 克隆项目
-git clone https://github.com/xdfnet/Moni.git
-cd Moni
+git clone https://github.com/xdfnet/iMoni.git
+cd iMoni
 
 # 完整构建（包含版本号递增）
 make build
@@ -89,7 +89,7 @@ make help
 
 ```bash
 # 打开项目
-open Moni.xcodeproj
+open iMoni.xcodeproj
 
 # 选择目标设备（macOS）
 # 点击构建按钮或使用快捷键 Cmd+B
@@ -108,7 +108,7 @@ open Moni.xcodeproj
 ## 项目结构
 
 ```text
-Moni/
+iMoni/
 ├── Moni/                    # 主要源代码
 │   ├── App.swift           # 应用入口点和生命周期管理
 │   ├── MenuBarController.swift  # 菜单栏控制器和用户界面
@@ -222,7 +222,7 @@ make test              # 运行测试
 
 ## 联系方式
 
-- 项目主页：<https://github.com/xdfnet/Moni>
+- 项目主页：<https://github.com/xdfnet/iMoni>
 - 问题反馈：提交 GitHub Issue
 - 功能建议：参与项目讨论
 
@@ -232,10 +232,10 @@ make test              # 运行测试
 
 ---
 
-Moni - 让 AI 服务监控变得简单高效
+iMoni - 让 AI 服务监控变得简单高效
 
 ---
 
 Built with ❤️ using Swift and SwiftUI
 
-© 2025 Moni App
+© 2025 iMoni App

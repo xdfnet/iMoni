@@ -93,5 +93,9 @@ struct MonitorConstants {
     
     // 网络监控配置
     static let maxReasonableSpeed: Double = 1000.0  // 1000 MB/s（十进制）作为合理速度上限
+
+    // 网络接口配置
+    static let networkInterfaceFlags: Int32 = IFF_UP | IFF_LOOPBACK
+    static let activeInterfaceFlags: Int32 = IFF_UP
 }
 

@@ -1,9 +1,9 @@
 #
 #  Makefile
-#  Moni - AI Service Latency Monitor
+#  iMoni - AI Service Latency Monitor
 #
-#  Created by Moni Team
-#  Copyright © 2025 Moni App. All rights reserved.
+#  Created by iMoni Team
+#  Copyright © 2025 iMoni App. All rights reserved.
 #
 #  项目构建自动化工具
 #
@@ -26,9 +26,9 @@
 #
 
 # 项目基本信息
-PROJECT_NAME = Moni
-APP_NAME = Moni
-SCHEME = Moni
+PROJECT_NAME = iMoni
+APP_NAME = iMoni
+SCHEME = iMoni
 CONFIGURATION = Release
 
 # 构建路径配置

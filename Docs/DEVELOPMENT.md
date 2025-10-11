@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档为 Moni 项目的开发者提供详细的开发指南，包括环境配置、代码规范、构建流程、测试策略等。通过遵循这些指南，确保代码质量、可维护性和团队协作效率。
+本文档为 iMoni 项目的开发者提供详细的开发指南，包括环境配置、代码规范、构建流程、测试策略等。通过遵循这些指南，确保代码质量、可维护性和团队协作效率。
 
 ## 开发环境
 
@@ -76,7 +76,7 @@ source ~/.zshrc
 ### 目录组织
 
 ```text
-Moni/
+iMoni/
 ├── Moni/                    # 主要源代码
 │   ├── App.swift           # 应用入口点和生命周期管理
 │   ├── MenuBarController.swift  # 菜单栏控制器和用户界面
@@ -237,7 +237,7 @@ make quality-check
 
 #### 项目配置
 
-1. 打开 `Moni.xcodeproj`
+1. 打开 `iMoni.xcodeproj`
 2. 选择正确的目标设备（macOS）
 3. 选择 Release 配置进行生产构建
 
@@ -276,7 +276,7 @@ make quality-check
 
 ```bash
 # 构建并检查警告
-xcodebuild -project Moni.xcodeproj -scheme Moni -configuration Release build
+xcodebuild -project iMoni.xcodeproj -scheme iMoni -configuration Release build
 ```
 
 #### 代码审查清单
@@ -298,7 +298,7 @@ xcodebuild -project Moni.xcodeproj -scheme Moni -configuration Release build
 
 ```swift
 import XCTest
-@testable import Moni
+@testable import iMoni
 
 class UtilitiesTests: XCTestCase {
     
@@ -621,7 +621,7 @@ private func createNewServiceMenu() -> NSMenu {
 make build
 
 # 验证构建产物
-ls -la /Applications/Moni.app
+ls -la /Applications/iMoni.app
 ```
 
 ### 发布检查清单
@@ -660,7 +660,7 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 确保应用有网络访问权限：
 - 系统偏好设置 → 安全性与隐私 → 网络
-- 添加 Moni 应用
+- 添加 iMoni 应用
 
 #### 状态栏不显示
 
@@ -678,4 +678,4 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 4. **性能优化**：合理的资源管理和优化策略
 5. **扩展性**：支持新功能和监控类型的扩展
 
-通过持续改进和优化，Moni 项目将保持高质量、高性能和良好的用户体验。
+通过持续改进和优化，iMoni 项目将保持高质量、高性能和良好的用户体验。

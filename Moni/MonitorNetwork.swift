@@ -53,7 +53,7 @@ class MonitorNetwork: BaseMonitor {
             delegate?.networkStats(self, didFailWithError: ConnectionStatus.disconnected)
             return
         }
-        
+
         updateInterval(interval)
         super.startMonitoring()
     }
@@ -107,7 +107,8 @@ class MonitorNetwork: BaseMonitor {
                 resetNetworkStats()
                 return
             }
-            
+
+            // 实时更新显示，不缓存
             Utilities.safeMainQueueCallback { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.networkStats(self, didUpdateDownloadSpeed: downloadSpeedMBps, uploadSpeed: 0.0)
@@ -161,51 +162,51 @@ class MonitorNetwork: BaseMonitor {
     /// 汇总所有有效网卡的累计接收字节数
     private func getTotalNetworkBytes() throws -> (received: UInt64, sent: UInt64) {
         var totalReceivedBytes: UInt64 = 0
-        
+
         // 系统调用参数
         let mib: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
         let ifmSize = MemoryLayout<if_msghdr>.size
         let if2mSize = MemoryLayout<if_msghdr2>.size
-        
+
         // 第一次调用：获取所需缓冲区大小
         var len: size_t = 0
         guard sysctl(UnsafeMutablePointer(mutating: mib), UInt32(mib.count), nil, &len, nil, 0) >= 0 else {
             throw NetworkError.sysctlFailed
         }
-        
+
         // 分配缓冲区并获取数据
         var buffer = [CChar](repeating: 0, count: len)
         guard sysctl(UnsafeMutablePointer(mutating: mib), UInt32(mib.count), &buffer, &len, nil, 0) >= 0 else {
             throw NetworkError.sysctlFailed
         }
-        
+
         // 解析网络接口信息
         var offset = 0
         while offset + ifmSize <= len {
             let ifm = buffer.withUnsafeBytes { ptr in
                 ptr.load(fromByteOffset: offset, as: if_msghdr.self)
             }
-            
+
             // 确保有足够空间读取 if_msghdr2
             if offset + if2mSize <= len && ifm.ifm_type == RTM_IFINFO2 {
                 let if2m = buffer.withUnsafeBytes { ptr in
                     ptr.load(fromByteOffset: offset, as: if_msghdr2.self)
                 }
-                
+
                 // 只考虑活跃的非回环接口
                 if (if2m.ifm_flags & IFF_UP) != 0 && (if2m.ifm_flags & IFF_LOOPBACK) == 0 {
-                    totalReceivedBytes += if2m.ifm_data.ifi_ibytes
+                    totalReceivedBytes += if2m.ifm_data.ifi_ibytes  // 接收字节数
                 }
             }
-            
+
             // 确保不越界
             guard ifm.ifm_msglen > 0 && offset + Int(ifm.ifm_msglen) <= len else {
                 break
             }
             offset += Int(ifm.ifm_msglen)
         }
-        
-        return (totalReceivedBytes, 0)  // 返回 0 表示不使用发送字节数
+
+        return (totalReceivedBytes, 0)  // 返回 0 表示不监控上传速度
     }
     
     // MARK: - 私有错误类型

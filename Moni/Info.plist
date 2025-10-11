@@ -4,10 +4,14 @@
 <dict>
 	<key>CFBundleIconFile</key>
 	<string></string>
+	<key>CFBundleName</key>
+	<string>iMoni</string>
+	<key>CFBundleDisplayName</key>
+	<string>iMoni</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.11</string>
+	<string>1.13</string>
 	<key>CFBundleVersion</key>
-	<string>20250830132456</string>
+	<string>20251006115608</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSSupportsAutomaticTermination</key>

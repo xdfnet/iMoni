@@ -2,19 +2,19 @@
 
 ## 概述
 
-本文档提供了 Moni 项目的完整 API 参考，包括所有公开的类、协议、方法和属性。通过详细的文档说明和代码示例，帮助开发者理解和使用 Moni 的各个组件。
+本文档提供了 iMoni 项目的完整 API 参考，包括所有公开的类、协议、方法和属性。通过详细的文档说明和代码示例，帮助开发者理解和使用 iMoni 的各个组件。
 
 ## 核心类型
 
 ### App.swift
 
-#### MoniApp
+#### iMoniApp
 
 主应用结构，使用 SwiftUI 的 `@main` 协议。
 
 ```swift
 @main
-struct MoniApp: App {
+struct iMoniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
@@ -447,7 +447,7 @@ struct MonitorConstants {
 
 ```swift
 struct AppConstants {
-    static let appName = "Moni"
+    static let appName = "iMoni"
     static let appVersion = "1.07"
     static let defaultValue = "--"
     static let maxDisplayLength = 20
@@ -637,7 +637,7 @@ enum NetworkError: Error, LocalizedError {
 
 ### 用户默认值
 
-Moni 使用 `UserDefaults` 存储用户配置，所有配置键都以 `com.moni` 为前缀。
+iMoni 使用 `UserDefaults` 存储用户配置，所有配置键都以 `com.imoni` 为前缀。
 
 **配置项：**
 
@@ -725,7 +725,7 @@ if bytesReceived < lastBytesReceived {
 
 ### 锁机制
 
-Moni 使用 `NSLock` 保护共享状态：
+iMoni 使用 `NSLock` 保护共享状态：
 
 ```swift
 class BaseMonitor: NSObject {
@@ -1082,7 +1082,7 @@ case .error:
 
 ## 总结
 
-Moni 的 API 设计遵循以下原则：
+iMoni 的 API 设计遵循以下原则：
 
 1. **一致性**：所有组件使用统一的接口和命名规范
 2. **可扩展性**：支持新监控类型和服务端点的添加
@@ -1091,4 +1091,4 @@ Moni 的 API 设计遵循以下原则：
 5. **性能优化**：内存管理和网络优化的最佳实践
 6. **测试支持**：完整的测试框架和调试工具
 
-通过遵循这些 API 设计原则，Moni 提供了稳定、高效、易用的网络监控解决方案。
+通过遵循这些 API 设计原则，iMoni 提供了稳定、高效、易用的网络监控解决方案。
