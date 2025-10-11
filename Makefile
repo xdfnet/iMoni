@@ -101,8 +101,8 @@ step-update-version:
 	@CURRENT_FULL_VERSION=$$(plutil -extract CFBundleShortVersionString raw "$(SOURCE_INFO_PLIST)" 2>/dev/null || echo "1.00"); \
 	MAJOR=$$(echo $$CURRENT_FULL_VERSION | awk -F. '{print $$1}'); \
 	MINOR=$$(echo $$CURRENT_FULL_VERSION | awk -F. '{print $$2}'); \
-	NEW_MINOR=$$((10#$$MINOR + 1)); \
-	NEW_VERSION="$${MAJOR}.$$(printf "%02d" $$NEW_MINOR)"; \
+	NEW_MINOR=$$((10#$${MINOR:-0} + 1)); \
+	NEW_VERSION="$${MAJOR:-1}.$$(printf "%02d" $$NEW_MINOR)"; \
 	BUILD_NUMBER=$$(date +%Y%m%d%H%M%S); \
 	echo "$(GREEN)$(ICON_SUCCESS) 版本号已更新：$$CURRENT_FULL_VERSION → $$NEW_VERSION (Build: $$BUILD_NUMBER)$(NC)"; \
 	echo "  正在更新 Info.plist 文件..."; \
@@ -112,7 +112,11 @@ step-update-version:
 	echo "  正在更新 Xcode 项目文件..."; \
 	sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $$NEW_VERSION;/g" "$(PROJECT_NAME).xcodeproj/project.pbxproj"; \
 	sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $$BUILD_NUMBER;/g" "$(PROJECT_NAME).xcodeproj/project.pbxproj"; \
-	echo "$(GREEN)$(ICON_SUCCESS) Xcode 项目文件已更新$(NC)"
+	echo "$(GREEN)$(ICON_SUCCESS) Xcode 项目文件已更新$(NC)"; \
+	echo "  正在更新 README.md 文件..."; \
+	sed -i '' "s/\[!\[Version\](https:\/\/img\.shields\.io\/badge\/Version-[^-]*-green\.svg)\]/\[![Version](https:\/\/img.shields.io\/badge\/Version-$$NEW_VERSION-green.svg)\]/g" README.md; \
+	sed -i '' "s/### 最新功能 (v[0-9]*\.[0-9]*)/### 最新功能 (v$$NEW_VERSION)/g" README.md; \
+	echo "$(GREEN)$(ICON_SUCCESS) README.md 文件已更新$(NC)"
 
 # 第三步：构建应用
 step-build-app:
