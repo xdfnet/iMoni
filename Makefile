@@ -37,7 +37,7 @@ PRODUCT_DIR = $(BUILD_DIR)/Build/Products/$(CONFIGURATION)
 APP_BUNDLE = $(PRODUCT_DIR)/$(PROJECT_NAME).app
 
 # 配置文件路径
-SOURCE_INFO_PLIST = ./$(PROJECT_NAME)/Info.plist
+SOURCE_INFO_PLIST = ./Moni/Info.plist
 
 # 输出模式配置
 OUTPUT_MODE = -quiet
@@ -78,7 +78,7 @@ all: build
 
 # 清理控制台
 step-clear:
-	@clear # 清理控制台
+	@echo "" # 清理控制台
 
 # 第一步：检查并关闭运行中的应用
 step-close-app:
