@@ -37,6 +37,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private var currentEndpoint: ServiceEndpoint?
     private var currentLatency: String = AppConstants.defaultValue
     private var currentDownloadSpeed: String = AppConstants.defaultValue
+    private var currentUploadSpeed: String = AppConstants.defaultValue
     
     /// 状态指示器
     private var connectionStatus: ConnectionStatus = .disconnected
@@ -428,6 +429,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             }
         case .networkSpeed:
             tooltip += "Download Speed: \(currentDownloadSpeed)\n"
+            tooltip += "Upload Speed: \(currentUploadSpeed)\n"
         }
         
         tooltip += "Update Rate: \(Utilities.formatInterval(currentMonitoringInterval))\n"
@@ -452,7 +454,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
                 return "\(serviceName): \(AppConstants.defaultValue)"
             }
         case .networkSpeed:
-            return "↓\(currentDownloadSpeed)"
+            return "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)"
         }
     }
     
@@ -478,9 +480,10 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     // MARK: - MonitorNetworkDelegate
     
-    /// 下行网速更新（单位 MB/s，3 位小数）
+    /// 上/下行网速更新（单位 MB/s，3 位小数）
     func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double, uploadSpeed: Double) {
         currentDownloadSpeed = Utilities.formatSpeed(downloadSpeed)
+        currentUploadSpeed = Utilities.formatSpeed(uploadSpeed)
         connectionStatus = .connected
         isHealthy = true
         updateCombinedDisplay()
@@ -488,6 +491,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
         currentDownloadSpeed = AppConstants.defaultValue
+        currentUploadSpeed = AppConstants.defaultValue
         connectionStatus = status
         isHealthy = false
         

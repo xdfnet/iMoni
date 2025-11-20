@@ -32,6 +32,7 @@ class MonitorNetwork: BaseMonitor {
     weak var delegate: MonitorNetworkDelegate?
     
     private var lastBytesReceived: UInt64 = 0
+    private var lastBytesSent: UInt64 = 0
     private var lastUpdateTime: CFAbsoluteTime = 0
     
     // MARK: - 初始化
@@ -46,8 +47,9 @@ class MonitorNetwork: BaseMonitor {
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultNetworkInterval) {
         // 初始化上次值
         do {
-            let (totalReceived, _) = try getTotalNetworkBytes()
+            let (totalReceived, totalSent) = try getTotalNetworkBytes()
             lastBytesReceived = totalReceived
+            lastBytesSent = totalSent
             lastUpdateTime = Utilities.currentTimestamp()
         } catch {
             delegate?.networkStats(self, didFailWithError: ConnectionStatus.disconnected)
@@ -62,6 +64,7 @@ class MonitorNetwork: BaseMonitor {
     override func stopMonitoring() {
         super.stopMonitoring()
         lastBytesReceived = 0
+        lastBytesSent = 0
         lastUpdateTime = 0
     }
     
@@ -77,7 +80,7 @@ class MonitorNetwork: BaseMonitor {
     
     // MARK: - 私有方法
     
-    /// 计算下载速率并回调（MB/s）
+    /// 计算下载和上传速率并回调（MB/s）
     private func updateNetworkSpeeds() {
         let currentTime = Utilities.currentTimestamp()
         let timeElapsed = Utilities.timeDifference(from: lastUpdateTime)
@@ -85,10 +88,10 @@ class MonitorNetwork: BaseMonitor {
         guard timeElapsed > 0 else { return }
         
         do {
-            let (currentReceived, _) = try getTotalNetworkBytes()
+            let (currentReceived, currentSent) = try getTotalNetworkBytes()
             
             // 检查数据有效性
-            guard currentReceived >= lastBytesReceived else {
+            guard currentReceived >= lastBytesReceived, currentSent >= lastBytesSent else {
                 // 字节数减少，可能是网络接口重置，重新初始化
                 logNetworkInterfaceReset()
                 resetNetworkStats()
@@ -96,13 +99,16 @@ class MonitorNetwork: BaseMonitor {
             }
             
             let receivedDiff = currentReceived - lastBytesReceived
+            let sentDiff = currentSent - lastBytesSent
             
             // 转换为 MB/s (1000 * 1000 = 1,000,000 bytes per MB - 十进制标准)
             let bytesPerMB: Double = 1000.0 * 1000.0
             let downloadSpeedMBps = Double(receivedDiff) / timeElapsed / bytesPerMB
+            let uploadSpeedMBps = Double(sentDiff) / timeElapsed / bytesPerMB
             
             // 验证速度值的合理性
-            guard downloadSpeedMBps >= 0 && downloadSpeedMBps <= MonitorConstants.maxReasonableSpeed else {
+            guard downloadSpeedMBps >= 0 && downloadSpeedMBps <= MonitorConstants.maxReasonableSpeed,
+                  uploadSpeedMBps >= 0 && uploadSpeedMBps <= MonitorConstants.maxReasonableSpeed else {
                 logUnreasonableSpeed(downloadSpeedMBps)
                 resetNetworkStats()
                 return
@@ -111,10 +117,11 @@ class MonitorNetwork: BaseMonitor {
             // 实时更新显示，不缓存
             Utilities.safeMainQueueCallback { [weak self] in
                 guard let self = self else { return }
-                self.delegate?.networkStats(self, didUpdateDownloadSpeed: downloadSpeedMBps, uploadSpeed: 0.0)
+                self.delegate?.networkStats(self, didUpdateDownloadSpeed: downloadSpeedMBps, uploadSpeed: uploadSpeedMBps)
             }
             
             lastBytesReceived = currentReceived
+            lastBytesSent = currentSent
             lastUpdateTime = currentTime
             
         } catch {
@@ -130,8 +137,9 @@ class MonitorNetwork: BaseMonitor {
     /// 重置网络统计
     private func resetNetworkStats() {
         do {
-            let (totalReceived, _) = try getTotalNetworkBytes()
+            let (totalReceived, totalSent) = try getTotalNetworkBytes()
             lastBytesReceived = totalReceived
+            lastBytesSent = totalSent
             lastUpdateTime = Utilities.currentTimestamp()
         } catch {
             logNetworkError(error)
@@ -159,24 +167,47 @@ class MonitorNetwork: BaseMonitor {
         #endif
     }
     
-    /// 汇总所有有效网卡的累计接收字节数
+    /// 汇总所有有效网卡的累计上/下行字节数
     private func getTotalNetworkBytes() throws -> (received: UInt64, sent: UInt64) {
         var totalReceivedBytes: UInt64 = 0
+        var totalSentBytes: UInt64 = 0
 
-        // 系统调用参数
+        // 系统调用参数 - 使用固定数组避免临时指针问题
         let mib: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
         let ifmSize = MemoryLayout<if_msghdr>.size
         let if2mSize = MemoryLayout<if_msghdr2>.size
 
         // 第一次调用：获取所需缓冲区大小
         var len: size_t = 0
-        guard sysctl(UnsafeMutablePointer(mutating: mib), UInt32(mib.count), nil, &len, nil, 0) >= 0 else {
+        
+        // 使用 withUnsafeMutableBytes 安全地传递指针
+        let sysctlResult = mib.withUnsafeBufferPointer { mibBuffer in
+            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress), 
+                   UInt32(mib.count), 
+                   nil, 
+                   &len, 
+                   nil, 
+                   0)
+        }
+        
+        guard sysctlResult >= 0 else {
             throw NetworkError.sysctlFailed
         }
 
         // 分配缓冲区并获取数据
         var buffer = [CChar](repeating: 0, count: len)
-        guard sysctl(UnsafeMutablePointer(mutating: mib), UInt32(mib.count), &buffer, &len, nil, 0) >= 0 else {
+        
+        // 再次使用 withUnsafeMutableBytes 安全地传递指针
+        let sysctlResult2 = mib.withUnsafeBufferPointer { mibBuffer in
+            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress), 
+                   UInt32(mib.count), 
+                   &buffer, 
+                   &len, 
+                   nil, 
+                   0)
+        }
+        
+        guard sysctlResult2 >= 0 else {
             throw NetworkError.sysctlFailed
         }
 
@@ -196,6 +227,7 @@ class MonitorNetwork: BaseMonitor {
                 // 只考虑活跃的非回环接口
                 if (if2m.ifm_flags & IFF_UP) != 0 && (if2m.ifm_flags & IFF_LOOPBACK) == 0 {
                     totalReceivedBytes += if2m.ifm_data.ifi_ibytes  // 接收字节数
+                    totalSentBytes += if2m.ifm_data.ifi_obytes    // 发送字节数
                 }
             }
 
@@ -206,7 +238,7 @@ class MonitorNetwork: BaseMonitor {
             offset += Int(ifm.ifm_msglen)
         }
 
-        return (totalReceivedBytes, 0)  // 返回 0 表示不监控上传速度
+        return (totalReceivedBytes, totalSentBytes)
     }
     
     // MARK: - 私有错误类型
@@ -215,4 +247,3 @@ class MonitorNetwork: BaseMonitor {
         case sysctlFailed
     }
 }
-

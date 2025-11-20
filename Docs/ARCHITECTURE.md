@@ -133,7 +133,7 @@ protocol BaseMonitorProtocol: AnyObject {
 
 #### 职责
 - 系统网络流量统计
-- 下载速度计算
+- 上/下行速度计算
 - 网络接口状态监控
 
 #### 技术实现
@@ -280,7 +280,7 @@ protocol BaseMonitorProtocol: AnyObject {
 ### 2. 网络监控数据流
 
 ```text
-定时器触发 → MonitorNetwork 获取系统统计 → 计算下载速度 → 
+定时器触发 → MonitorNetwork 获取系统统计 → 计算上/下行速度 → 
 验证数据有效性 → 通过代理回调 → MenuBarController 更新显示
 ```
 

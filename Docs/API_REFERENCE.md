@@ -96,8 +96,8 @@ extension MenuBarController: MonitorLatencyDelegate {
 }
 
 extension MenuBarController: MonitorNetworkDelegate {
-    func monitor(_ monitor: MonitorNetwork, didUpdateDownloadSpeed speed: Double)
-    func monitor(_ monitor: MonitorNetwork, didFailWithError error: MonitorError)
+    func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double, uploadSpeed: Double)
+    func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus)
 }
 ```
 
@@ -233,10 +233,14 @@ override func cleanup()
 
 ```swift
 protocol MonitorNetworkDelegate: AnyObject {
-    func monitor(_ monitor: MonitorNetwork, didUpdateDownloadSpeed speed: Double)
-    func monitor(_ monitor: MonitorNetwork, didFailWithError error: MonitorError)
+    func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double, uploadSpeed: Double)
+    func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus)
 }
 ```
+
+**方法说明：**
+- `networkStats(_:didUpdateDownloadSpeed:uploadSpeed:)`: 当网络速度更新时调用。`downloadSpeed` 和 `uploadSpeed` 分别提供了实时的下行和上行速度（单位: MB/s）。
+- `networkStats(_:didFailWithError:)`: 当监控发生错误时调用。
 
 ### ServiceManager.swift
 
