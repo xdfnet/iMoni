@@ -48,6 +48,7 @@ class ServiceManager {
         let aiServices = [
             ServiceEndpoint(name: "Claude", host: "api.anthropic.com", port: 443),
             ServiceEndpoint(name: "Gemini", host: "generativelanguage.googleapis.com", port: 443),
+            ServiceEndpoint(name: "OpenAI", host: "api.openai.com", port: 443),
             ServiceEndpoint(name: "DeepSeek", host: "api.deepseek.com", port: 443),
             ServiceEndpoint(name: "GLM", host: "open.bigmodel.cn", port: 443),
             ServiceEndpoint(name: "Qwen", host: "dashscope.aliyuncs.com", port: 443),
