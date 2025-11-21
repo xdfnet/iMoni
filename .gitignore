@@ -125,3 +125,7 @@ Temporary Items
 # Temporary files
 *.tmp
 *.temp
+
+# Icon generation scripts
+generate_icons.sh
+Moni/icon_concept*.svg
