@@ -35,7 +35,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     /// 状态数据
     private var currentEndpoint: ServiceEndpoint?
-    private var currentLatency: String = AppConstants.defaultValue
+    private var rawLatency: TimeInterval = 0.0
     private var currentDownloadSpeed: String = AppConstants.defaultValue
     private var currentUploadSpeed: String = AppConstants.defaultValue
     
@@ -387,14 +387,14 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     /// 汇总当前需要显示的文本并更新到状态栏
     private func updateCombinedDisplay() {
-        let displayText = createDisplayText()
+        let attributedDisplayText = createAttributedDisplayText()
         let statusIcon = createStatusIcon()
         
         Utilities.safeMainQueueCallback { [weak self] in
             guard let self = self else { return }
             
             if let button = self.statusBarItem?.button {
-                button.title = displayText
+                button.attributedTitle = attributedDisplayText
                 button.image = statusIcon
                 
                 // 设置工具提示
@@ -423,7 +423,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             if let endpoint = currentEndpoint {
                 tooltip += "Service: \(endpoint.name)\n"
                 tooltip += "Host: \(endpoint.host):\(endpoint.port)\n"
-                tooltip += "Latency: \(currentLatency)\n"
+                tooltip += "Latency: \(Utilities.formatLatency(rawLatency))\n"
             } else {
                 tooltip += "No service selected\n"
             }
@@ -443,18 +443,38 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         return tooltip
     }
     
-    /// 创建显示文本
-    private func createDisplayText() -> String {
+    /// 创建带属性的显示文本
+    private func createAttributedDisplayText() -> NSAttributedString {
         switch currentDisplayMode {
         case .serviceLatency:
             let serviceName = currentEndpoint?.name ?? AppConstants.defaultValue
-            if connectionStatus == .connected {
-                return "\(serviceName): \(currentLatency)"
-            } else {
-                return "\(serviceName): \(AppConstants.defaultValue)"
+            
+            if connectionStatus != .connected {
+                return NSAttributedString(string: "\(serviceName): \(AppConstants.defaultValue)")
             }
+            
+            // 根据延迟确定颜色
+            let latencyColor: NSColor
+            if rawLatency > 500 {
+                latencyColor = .systemRed
+            } else if rawLatency > 200 {
+                latencyColor = .systemOrange
+            } else {
+                latencyColor = .labelColor
+            }
+            
+            let latencyString = Utilities.formatLatency(rawLatency)
+            let fullString = "\(serviceName): \(latencyString)"
+            let attributedString = NSMutableAttributedString(string: fullString)
+            
+            // 只对延迟部分应用颜色
+            let range = (fullString as NSString).range(of: latencyString)
+            attributedString.addAttribute(.foregroundColor, value: latencyColor, range: range)
+            
+            return attributedString
+            
         case .networkSpeed:
-            return "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)"
+            return NSAttributedString(string: "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)")
         }
     }
     
@@ -464,14 +484,14 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     /// 延迟更新回调（毫秒，0 位小数）
     func monitor(_ monitor: MonitorLatency, didUpdateLatency latency: TimeInterval, for endpoint: ServiceEndpoint) {
-        currentLatency = Utilities.formatLatency(latency)
+        rawLatency = latency
         connectionStatus = .connected
         isHealthy = true
         updateCombinedDisplay()
     }
     
     func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint) {
-        currentLatency = AppConstants.defaultValue
+        rawLatency = 0.0
         connectionStatus = status
         isHealthy = false
         
