@@ -77,11 +77,11 @@ struct MonitorConstants {
     
     // 监控间隔
     static let defaultLatencyInterval: TimeInterval = 0.5
-    static let defaultNetworkInterval: TimeInterval = 0.5
+    static let defaultNetworkInterval: TimeInterval = 0.1
     
     // 用户可配置的监控间隔选项
-    static let availableIntervals: [TimeInterval] = [0.5, 1.0, 2.0, 5.0]
-    static let defaultUserInterval: TimeInterval = 0.5
+    static let availableIntervals: [TimeInterval] = [0.1, 0.5, 1.0, 2.0, 5.0]
+    static let defaultUserInterval: TimeInterval = 0.1
     
     // 监控间隔限制
     static let minInterval: TimeInterval = 0.1

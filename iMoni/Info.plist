@@ -9,9 +9,9 @@
 	<key>CFBundleName</key>
 	<string>iMoni</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.26</string>
+	<string>1.27</string>
 	<key>CFBundleVersion</key>
-	<string>20251121201449</string>
+	<string>20251121203004</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSSupportsAutomaticTermination</key>
