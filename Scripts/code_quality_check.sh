@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 #  code_quality_check.sh
-#  Moni
+#  iMoni
 #
-#  Created by Moni Team
-#  Copyright © 2025 Moni App. All rights reserved.
+#  Created by iMoni Team
+#  Copyright © 2025 iMoni App. All rights reserved.
 #
 #  代码质量检查脚本
 #
@@ -19,7 +19,7 @@ echo "🔍 开始代码质量检查..."
 echo "=================================="
 
 # 检查目录
-PROJECT_DIR="Moni"
+PROJECT_DIR="iMoni"
 SWIFT_FILES=$(find "$PROJECT_DIR" -name "*.swift" -type f)
 
 # 计数器

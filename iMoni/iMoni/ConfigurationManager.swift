@@ -1,9 +1,9 @@
 //
 //  ConfigurationManager.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  配置管理器：负责应用配置的加载、保存和验证
 //
@@ -33,7 +33,7 @@ class ConfigurationManager {
     
     // MARK: - 属性
     private let defaults = UserDefaults.standard
-    private let configQueue = DispatchQueue(label: "com.moni.config", qos: .utility)
+    private let configQueue = DispatchQueue(label: "com.imoni.config", qos: .utility)
     
     // MARK: - 配置变更通知
     var onConfigurationChanged: (() -> Void)?
@@ -149,7 +149,7 @@ class ConfigurationManager {
     /// 重置所有配置到默认值
     func resetToDefaults() {
         configQueue.async {
-            let domain = Bundle.main.bundleIdentifier ?? "com.moni"
+            let domain = Bundle.main.bundleIdentifier ?? "com.imoni"
             self.defaults.removePersistentDomain(forName: domain)
             self.setupDefaultConfiguration()
             self.notifyConfigurationChanged()

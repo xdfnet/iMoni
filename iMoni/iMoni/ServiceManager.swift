@@ -1,9 +1,9 @@
 //
 //  ServiceManager.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  服务配置管理
 //

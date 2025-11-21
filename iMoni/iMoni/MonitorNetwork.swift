@@ -1,9 +1,9 @@
 //
 //  MonitorNetwork.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  系统级网络流量统计，计算上/下行速度（MB/s）
 //

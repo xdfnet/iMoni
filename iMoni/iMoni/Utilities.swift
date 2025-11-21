@@ -1,9 +1,9 @@
 //
 //  Utilities.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  工具类：提供常用的辅助功能
 //

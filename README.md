@@ -121,7 +121,7 @@ open iMoni.xcodeproj
 
 ```text
 iMoni/
-├── Moni/                    # 主要源代码
+├── iMoni/                    # 主要源代码
 │   ├── App.swift           # 应用入口点和生命周期管理
 │   ├── MenuBarController.swift  # 菜单栏控制器和用户界面
 │   ├── BaseMonitor.swift   # 基础监控抽象类

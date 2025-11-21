@@ -1,9 +1,9 @@
 //
 //  MenuBarController.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  菜单栏控制器：负责状态栏文本展示与菜单交互
 //
@@ -291,7 +291,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         
         // 版权信息
         let copyrightItem = NSMenuItem(
-            title: "© 2025 Moni App",
+            title: "© 2025 iMoni App",
             action: nil,
             keyEquivalent: ""
         )
@@ -416,7 +416,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     /// 创建工具提示
     private func createTooltip() -> String {
-        var tooltip = "Moni - Network Monitor\n"
+        var tooltip = "iMoni - Network Monitor\n"
         
         switch currentDisplayMode {
         case .serviceLatency:

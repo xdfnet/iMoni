@@ -37,7 +37,7 @@ PRODUCT_DIR = $(BUILD_DIR)/Build/Products/$(CONFIGURATION)
 APP_BUNDLE = $(PRODUCT_DIR)/$(PROJECT_NAME).app
 
 # 配置文件路径
-SOURCE_INFO_PLIST = ./Moni/Info.plist
+SOURCE_INFO_PLIST = ./iMoni/Info.plist
 
 # 输出模式配置
 OUTPUT_MODE = -quiet

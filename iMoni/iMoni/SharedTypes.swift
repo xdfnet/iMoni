@@ -1,9 +1,9 @@
 //
 //  SharedTypes.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  共享类型定义
 //
@@ -41,11 +41,11 @@ struct AppConstants {
     
     // MARK: - 应用信息
     struct AppInfo {
-        static let name = "Moni - AI Service Latency Monitor"
+        static let name = "iMoni - AI Service Latency Monitor"
         static let description = """
         A lightweight macOS menu bar app for real-time monitoring of AI service network latency and bandwidth usage.
         
-        © 2024 Moni App
+        © 2024 iMoni App
         """
         static let confirmButtonText = "OK"
     }
@@ -88,8 +88,8 @@ struct MonitorConstants {
     static let maxInterval: TimeInterval = 10.0
     
     // 队列标识
-    static let latencyQueueLabel = "com.moni.latency"
-    static let networkQueueLabel = "com.moni.network"
+    static let latencyQueueLabel = "com.imoni.latency"
+    static let networkQueueLabel = "com.imoni.network"
     
     // 网络监控配置
     static let maxReasonableSpeed: Double = 1000.0  // 1000 MB/s（十进制）作为合理速度上限

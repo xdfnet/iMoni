@@ -173,6 +173,6 @@
 - 特别感谢所有提供反馈和建议的用户
 
 ### 相关链接
-- [项目主页](https://github.com/xdfnet/Moni)
-- [问题反馈](https://github.com/xdfnet/Moni/issues)
-- [下载发布版](https://github.com/xdfnet/Moni/releases)
+- [项目主页](https://github.com/xdfnet/iMoni)
+- [问题反馈](https://github.com/xdfnet/iMoni/issues)
+- [下载发布版](https://github.com/xdfnet/iMoni/releases)

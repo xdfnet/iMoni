@@ -1,9 +1,9 @@
 //
 //  MonitorLatency.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  TCP 探活与延迟测量（毫秒）
 //

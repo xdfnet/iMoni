@@ -1,9 +1,9 @@
 //
 //  App.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  应用入口文件：负责应用生命周期管理
 //
@@ -18,7 +18,7 @@ import SwiftUI
 // MARK: - 主应用结构
 
 @main
-struct MoniApp: App {
+struct iMoniApp: App {
     
     // MARK: - 属性
     

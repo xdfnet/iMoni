@@ -121,7 +121,7 @@ xcodebuild -project iMoni.xcodeproj -scheme iMoni -configuration Release build
 
 ### 配置文件
 - `Info.plist`: 应用配置，包含版本号、权限等
-- `Moni.entitlements`: 应用权限配置
+- `iMoni.entitlements`: 应用权限配置
 - `Makefile`: 构建自动化脚本
 
 ### 核心源文件

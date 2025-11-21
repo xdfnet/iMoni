@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档定义了 Moni 项目的代码注释规范，确保代码的可读性、可维护性和团队协作效率。通过统一的注释风格和格式，帮助开发者快速理解代码结构和功能。
+本文档定义了 iMoni 项目的代码注释规范，确保代码的可读性、可维护性和团队协作效率。通过统一的注释风格和格式，帮助开发者快速理解代码结构和功能。
 
 ## 基本原则
 
@@ -29,10 +29,10 @@
 ```swift
 //
 //  文件名.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  文件描述：简要说明文件的主要功能和职责
 //
@@ -48,10 +48,10 @@
 ```swift
 //
 //  App.swift
-//  Moni
+//  iMoni
 //
-//  Created by Moni Team
-//  Copyright © 2025 Moni App. All rights reserved.
+//  Created by iMoni Team
+//  Copyright © 2025 iMoni App. All rights reserved.
 //
 //  应用入口文件：负责应用生命周期管理
 //
@@ -309,7 +309,7 @@ private var cachedResult: CachedData?
 // 使用专用队列处理配置操作，避免阻塞主线程
 // 队列优先级：userInitiated，适合用户交互相关的配置
 private let configQueue = DispatchQueue(
-    label: "com.moni.config",
+    label: "com.imoni.config",
     qos: .userInitiated
 )
 ```
@@ -366,7 +366,7 @@ func updateConnectionStatus(_ status: ConnectionStatus) {
 // 使用专用队列处理网络操作，避免阻塞主线程
 // 队列特性：并发队列，支持多个网络连接同时进行
 private let networkQueue = DispatchQueue(
-    label: "com.moni.network",
+    label: "com.imoni.network",
     qos: .userInitiated,
     attributes: .concurrent
 )
@@ -374,7 +374,7 @@ private let networkQueue = DispatchQueue(
 // 配置操作使用串行队列，确保操作的顺序性
 // 避免配置读写冲突和数据不一致
 private let configQueue = DispatchQueue(
-    label: "com.moni.config",
+    label: "com.imoni.config",
     qos: .userInitiated
 )
 ```
@@ -559,4 +559,4 @@ if let oldConfig = userDefaults.object(forKey: "oldConfigKey") {
 4. **代码质量**：注释促进代码审查和质量提升
 5. **知识传承**：注释记录设计意图和业务逻辑
 
-通过持续改进注释质量，Moni 项目将保持高标准的代码文档，为开发者提供良好的开发体验。
+通过持续改进注释质量，iMoni 项目将保持高标准的代码文档，为开发者提供良好的开发体验。
