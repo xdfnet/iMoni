@@ -2,7 +2,7 @@
 
 [![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)](https://swift.org)
 [![macOS](https://img.shields.io/badge/macOS-15.0+-blue.svg)](https://developer.apple.com/macos/)
-[![Version](https://img.shields.io/badge/Version-1.27-green.svg)](https://github.com/xdfnet/iMoni)
+[![Version](https://img.shields.io/badge/Version-1.28.3-green.svg)](https://github.com/xdfnet/iMoni)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 项目简介

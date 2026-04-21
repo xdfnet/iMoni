@@ -307,7 +307,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.28.3;
+				MARKETING_VERSION = 1.28.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.david.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -458,7 +458,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.28.3;
+				MARKETING_VERSION = 1.28.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.david.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

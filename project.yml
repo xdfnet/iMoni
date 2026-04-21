@@ -34,7 +34,7 @@ targets:
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         ENABLE_HARDENED_RUNTIME: YES
         GENERATE_INFOPLIST_FILE: YES
-        MARKETING_VERSION: "1.28.3"
+        MARKETING_VERSION: "1.28.4"
     dependencies: []
 
   iMoniTests:
