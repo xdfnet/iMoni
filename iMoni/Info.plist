@@ -2,16 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDisplayName</key>
-	<string>iMoni</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
-	<key>CFBundleName</key>
-	<string>iMoni</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.27</string>
-	<key>CFBundleVersion</key>
-	<string>20251121203004</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSSupportsAutomaticTermination</key>

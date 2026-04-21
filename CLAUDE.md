@@ -336,6 +336,16 @@ enum NetworkError: Error, LocalizedError {
 - 优化网络监控：改进了 `MonitorNetwork.swift` 中的错误处理和代码结构
 - 延迟监控优化：修复了 `MonitorLatency.swift` 中的缩进和主线程回调问题
 
+## 项目配置
+
+| 配置项 | 值 |
+|--------|-----|
+| 最低 macOS | 26.0 |
+| Swift 版本 | 5.0 |
+| Xcode 版本 | 16.0 |
+| Bundle ID | David.iMoni |
+| 开发团队 | K9UF7A2D7Y |
+
 ## 注意事项
 
 1. **始终使用 Utilities 工具函数**：避免直接使用 `print`, `DispatchQueue.main.async` 等
