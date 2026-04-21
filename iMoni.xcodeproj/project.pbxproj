@@ -3,76 +3,114 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 90;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		10a41b2647d643899768766900bb517b /* SharedTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10a41b2647d643899768766900bb517c /* SharedTypes.swift */; };
-		1A1234567890123456789001 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789002 /* App.swift */; };
-		1A1234567890123456789003 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789004 /* MenuBarController.swift */; };
-		1A1234567890123456789005 /* MonitorLatency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789006 /* MonitorLatency.swift */; };
-		1A1234567890123456789007 /* ServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789008 /* ServiceManager.swift */; };
-		1A1234567890123456789025 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789026 /* Assets.xcassets */; };
-		1A1234567890123456789027 /* MonitorNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789028 /* MonitorNetwork.swift */; };
-		1A1234567890123456789029 /* BaseMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789030 /* BaseMonitor.swift */; };
-		1A1234567890123456789031 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789032 /* Utilities.swift */; };
-		1A1234567890123456789033 /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1234567890123456789034 /* ConfigurationManager.swift */; };
+		0FB493F4396FB820BE4B3EE3 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB36529EA52167AA649BA1FD /* App.swift */; };
+		2AFA76CEA8B88FA8B63C503C /* MenuBarControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E1426A1D1C1CD5C5C1C7A52 /* MenuBarControllerTests.swift */; };
+		36B1CAD2D54E2D56E5350FCE /* ServiceManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A282E8FBF03CF50CF718BEAE /* ServiceManagerTests.swift */; };
+		3A0180D06BD98C1132C2AE52 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D82B52906E1EC1492A1678 /* MenuBarController.swift */; };
+		4258CDBA413D9809CB58E9F5 /* MonitorLatency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9666341B4C81F06B8D679B49 /* MonitorLatency.swift */; };
+		507A41E1529E606BD55B5ED5 /* ServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4173261B498D31A6A89A1C05 /* ServiceManager.swift */; };
+		7588E4F37664E8FBA0A5ECD7 /* UtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314347587FE76779E7CF405B /* UtilitiesTests.swift */; };
+		77249A8B39D73416CC6F4F91 /* BaseMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52635B9C309832FE981EDC33 /* BaseMonitor.swift */; };
+		77E91E6FDC97815D00D8CE99 /* MonitorLatencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F95902D18DF13690BA542 /* MonitorLatencyTests.swift */; };
+		87898F9085D5E28D12637947 /* ConfigurationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B4B22766985B1198B32678 /* ConfigurationManagerTests.swift */; };
+		9308B38EA8F051F3DBBA601C /* MonitorNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */; };
+		9DA57691F3F1990CC66856AD /* MonitorNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 391D3659A31B90DCC1E9F998 /* MonitorNetworkTests.swift */; };
+		CC05014EF90785FD83BF9B9B /* BaseMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD497169ACE3A3A9DF756A7B /* BaseMonitorTests.swift */; };
+		DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3CC934CE62FFFAF200C3C135 /* Assets.xcassets */; };
+		DE93EBDC2C797F9295004E9A /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B01602DB999EE5607C1D1B /* Utilities.swift */; };
+		DEC02A02BE6497090B4426A2 /* SharedTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06510C3E6CAB82AD0DF38245 /* SharedTypes.swift */; };
+		E7CD3D7036737093036438AD /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4E0DE03F0F730F671C390 /* ConfigurationManager.swift */; };
+		F92BE149A4DB7DD50BFB7F99 /* SharedTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9609652947387A5B69A856F6 /* SharedTypesTests.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		8C64789862347023FDE9299E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A2A4CA6FE385EA3B802672F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 587493FE4D66955FDA9BF5CD;
+			remoteInfo = iMoni;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		10a41b2647d643899768766900bb517c /* SharedTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypes.swift; sourceTree = "<group>"; };
-		1A1234567890123456789002 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
-		1A1234567890123456789004 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
-		1A1234567890123456789006 /* MonitorLatency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorLatency.swift; sourceTree = "<group>"; };
-		1A1234567890123456789008 /* ServiceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceManager.swift; sourceTree = "<group>"; };
-		1A1234567890123456789009 /* iMoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iMoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1A1234567890123456789010 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1A1234567890123456789026 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1A1234567890123456789028 /* MonitorNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetwork.swift; sourceTree = "<group>"; };
-		1A1234567890123456789030 /* BaseMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMonitor.swift; sourceTree = "<group>"; };
-		1A1234567890123456789032 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
-		1A1234567890123456789034 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
+		06510C3E6CAB82AD0DF38245 /* SharedTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypes.swift; sourceTree = "<group>"; };
+		314347587FE76779E7CF405B /* UtilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesTests.swift; sourceTree = "<group>"; };
+		391D3659A31B90DCC1E9F998 /* MonitorNetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetworkTests.swift; sourceTree = "<group>"; };
+		3CC934CE62FFFAF200C3C135 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3E1426A1D1C1CD5C5C1C7A52 /* MenuBarControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarControllerTests.swift; sourceTree = "<group>"; };
+		3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetwork.swift; sourceTree = "<group>"; };
+		4173261B498D31A6A89A1C05 /* ServiceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceManager.swift; sourceTree = "<group>"; };
+		52635B9C309832FE981EDC33 /* BaseMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMonitor.swift; sourceTree = "<group>"; };
+		61B4B22766985B1198B32678 /* ConfigurationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManagerTests.swift; sourceTree = "<group>"; };
+		80B01602DB999EE5607C1D1B /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		9609652947387A5B69A856F6 /* SharedTypesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypesTests.swift; sourceTree = "<group>"; };
+		9666341B4C81F06B8D679B49 /* MonitorLatency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorLatency.swift; sourceTree = "<group>"; };
+		A282E8FBF03CF50CF718BEAE /* ServiceManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceManagerTests.swift; sourceTree = "<group>"; };
+		B3344CEBEDD33EE2813412B9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BD497169ACE3A3A9DF756A7B /* BaseMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMonitorTests.swift; sourceTree = "<group>"; };
+		C9F4E0DE03F0F730F671C390 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
+		D05F95902D18DF13690BA542 /* MonitorLatencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorLatencyTests.swift; sourceTree = "<group>"; };
+		D88B44FD5D12C8BC99811C72 /* iMoniTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iMoniTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E78182CF4D2FECF5C253EF7A /* iMoni.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iMoni.entitlements; sourceTree = "<group>"; };
+		EB36529EA52167AA649BA1FD /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		F5D82B52906E1EC1492A1678 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		F60B6ABB8D8F37687EBA30B8 /* iMoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iMoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFrameworksBuildPhase section */
-		1A1234567890123456789011 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			files = (
-			);
-		};
-/* End PBXFrameworksBuildPhase section */
-
 /* Begin PBXGroup section */
-		1A1234567890123456789012 = {
+		66E219AD86D9A9C61254346A /* iMoni */ = {
 			isa = PBXGroup;
 			children = (
-1A1234567890123456789013 /* iMoni */,
-				1A1234567890123456789014 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		1A1234567890123456789013 /* iMoni */ = {
-			isa = PBXGroup;
-			children = (
-				1A1234567890123456789010 /* Info.plist */,
-				1A1234567890123456789002 /* App.swift */,
-				1A1234567890123456789030 /* BaseMonitor.swift */,
-				1A1234567890123456789034 /* ConfigurationManager.swift */,
-				1A1234567890123456789004 /* MenuBarController.swift */,
-				1A1234567890123456789006 /* MonitorLatency.swift */,
-				1A1234567890123456789028 /* MonitorNetwork.swift */,
-				1A1234567890123456789008 /* ServiceManager.swift */,
-				10a41b2647d643899768766900bb517c /* SharedTypes.swift */,
-				1A1234567890123456789032 /* Utilities.swift */,
-				1A1234567890123456789026 /* Assets.xcassets */,
+				EB36529EA52167AA649BA1FD /* App.swift */,
+				3CC934CE62FFFAF200C3C135 /* Assets.xcassets */,
+				52635B9C309832FE981EDC33 /* BaseMonitor.swift */,
+				C9F4E0DE03F0F730F671C390 /* ConfigurationManager.swift */,
+				E78182CF4D2FECF5C253EF7A /* iMoni.entitlements */,
+				B3344CEBEDD33EE2813412B9 /* Info.plist */,
+				F5D82B52906E1EC1492A1678 /* MenuBarController.swift */,
+				9666341B4C81F06B8D679B49 /* MonitorLatency.swift */,
+				3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */,
+				4173261B498D31A6A89A1C05 /* ServiceManager.swift */,
+				06510C3E6CAB82AD0DF38245 /* SharedTypes.swift */,
+				80B01602DB999EE5607C1D1B /* Utilities.swift */,
 			);
 			path = iMoni;
 			sourceTree = "<group>";
 		};
-		1A1234567890123456789014 /* Products */ = {
+		8984344F56A2FD9F7157745B /* iMoniTests */ = {
 			isa = PBXGroup;
 			children = (
-				1A1234567890123456789009 /* iMoni.app */,
+				BD497169ACE3A3A9DF756A7B /* BaseMonitorTests.swift */,
+				61B4B22766985B1198B32678 /* ConfigurationManagerTests.swift */,
+				3E1426A1D1C1CD5C5C1C7A52 /* MenuBarControllerTests.swift */,
+				D05F95902D18DF13690BA542 /* MonitorLatencyTests.swift */,
+				391D3659A31B90DCC1E9F998 /* MonitorNetworkTests.swift */,
+				A282E8FBF03CF50CF718BEAE /* ServiceManagerTests.swift */,
+				9609652947387A5B69A856F6 /* SharedTypesTests.swift */,
+				314347587FE76779E7CF405B /* UtilitiesTests.swift */,
+			);
+			path = iMoniTests;
+			sourceTree = "<group>";
+		};
+		CD658B2D197E3608290E4E81 = {
+			isa = PBXGroup;
+			children = (
+				66E219AD86D9A9C61254346A /* iMoni */,
+				8984344F56A2FD9F7157745B /* iMoniTests */,
+				CF5E553B24D580C04130A69B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CF5E553B24D580C04130A69B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F60B6ABB8D8F37687EBA30B8 /* iMoni.app */,
+				D88B44FD5D12C8BC99811C72 /* iMoniTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,89 +118,211 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1A1234567890123456789015 /* iMoni */ = {
+		3B665CEE8A88E2596FF4A217 /* iMoniTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1A1234567890123456789016 /* Build configuration list for PBXNativeTarget "iMoni" */;
+			buildConfigurationList = 778608105BD8820366D95895 /* Build configuration list for PBXNativeTarget "iMoniTests" */;
 			buildPhases = (
-				1A1234567890123456789017 /* Sources */,
-				1A1234567890123456789011 /* Frameworks */,
-				1A1234567890123456789018 /* Resources */,
+				3718393A0CAAE2AD80F61428 /* Sources */,
 			);
 			buildRules = (
 			);
+			dependencies = (
+				CCD0E4AD79AC4A966D8B0C85 /* PBXTargetDependency */,
+			);
+			name = iMoniTests;
+			packageProductDependencies = (
+			);
+			productName = iMoniTests;
+			productReference = D88B44FD5D12C8BC99811C72 /* iMoniTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		587493FE4D66955FDA9BF5CD /* iMoni */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ECC780003DB1187E25773F9 /* Build configuration list for PBXNativeTarget "iMoni" */;
+			buildPhases = (
+				0AD2275FC11CC2DFA083477C /* Sources */,
+				53377E4F0CA3A8C7F7133A18 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
 			name = iMoni;
+			packageProductDependencies = (
+			);
 			productName = iMoni;
-			productReference = 1A1234567890123456789009 /* iMoni.app */;
+			productReference = F60B6ABB8D8F37687EBA30B8 /* iMoni.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		1A1234567890123456789019 /* Project object */ = {
+		1A2A4CA6FE385EA3B802672F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 2610;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
-					1A1234567890123456789015 = {
-						CreatedOnToolsVersion = 15.0;
+					3B665CEE8A88E2596FF4A217 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					587493FE4D66955FDA9BF5CD = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 1A1234567890123456789020 /* Build configuration list for PBXProject "iMoni" */;
+			buildConfigurationList = FCB130A5DBE854983FE2ECCC /* Build configuration list for PBXProject "iMoni" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				en,
 			);
-			mainGroup = 1A1234567890123456789012;
-			preferredProjectObjectVersion = 90;
-			productRefGroup = 1A1234567890123456789014 /* Products */;
+			mainGroup = CD658B2D197E3608290E4E81;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CF5E553B24D580C04130A69B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1A1234567890123456789015 /* iMoni */,
+				587493FE4D66955FDA9BF5CD /* iMoni */,
+				3B665CEE8A88E2596FF4A217 /* iMoniTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1A1234567890123456789018 /* Resources */ = {
+		53377E4F0CA3A8C7F7133A18 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
-				1A1234567890123456789025 /* Assets.xcassets in Resources */,
+				DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		1A1234567890123456789017 /* Sources */ = {
+		0AD2275FC11CC2DFA083477C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
-				1A1234567890123456789001 /* App.swift in Sources */,
-				1A1234567890123456789003 /* MenuBarController.swift in Sources */,
-				1A1234567890123456789005 /* MonitorLatency.swift in Sources */,
-				1A1234567890123456789007 /* ServiceManager.swift in Sources */,
-				10a41b2647d643899768766900bb517b /* SharedTypes.swift in Sources */,
-				1A1234567890123456789027 /* MonitorNetwork.swift in Sources */,
-				1A1234567890123456789029 /* BaseMonitor.swift in Sources */,
-				1A1234567890123456789031 /* Utilities.swift in Sources */,
-				1A1234567890123456789033 /* ConfigurationManager.swift in Sources */,
+				0FB493F4396FB820BE4B3EE3 /* App.swift in Sources */,
+				77249A8B39D73416CC6F4F91 /* BaseMonitor.swift in Sources */,
+				E7CD3D7036737093036438AD /* ConfigurationManager.swift in Sources */,
+				3A0180D06BD98C1132C2AE52 /* MenuBarController.swift in Sources */,
+				4258CDBA413D9809CB58E9F5 /* MonitorLatency.swift in Sources */,
+				9308B38EA8F051F3DBBA601C /* MonitorNetwork.swift in Sources */,
+				507A41E1529E606BD55B5ED5 /* ServiceManager.swift in Sources */,
+				DEC02A02BE6497090B4426A2 /* SharedTypes.swift in Sources */,
+				DE93EBDC2C797F9295004E9A /* Utilities.swift in Sources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3718393A0CAAE2AD80F61428 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC05014EF90785FD83BF9B9B /* BaseMonitorTests.swift in Sources */,
+				87898F9085D5E28D12637947 /* ConfigurationManagerTests.swift in Sources */,
+				2AFA76CEA8B88FA8B63C503C /* MenuBarControllerTests.swift in Sources */,
+				77E91E6FDC97815D00D8CE99 /* MonitorLatencyTests.swift in Sources */,
+				9DA57691F3F1990CC66856AD /* MonitorNetworkTests.swift in Sources */,
+				36B1CAD2D54E2D56E5350FCE /* ServiceManagerTests.swift in Sources */,
+				F92BE149A4DB7DD50BFB7F99 /* SharedTypesTests.swift in Sources */,
+				7588E4F37664E8FBA0A5ECD7 /* UtilitiesTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		CCD0E4AD79AC4A966D8B0C85 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 587493FE4D66955FDA9BF5CD /* iMoni */;
+			targetProxy = 8C64789862347023FDE9299E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		1A1234567890123456789022 /* Release configuration for PBXProject "iMoni" */ = {
+		45D2921C584AC50C379BFA7A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.david.iMoniTests;
+				PRODUCT_NAME = iMoniTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iMoni.app/Contents/MacOS/iMoni";
+			};
+			name = Release;
+		};
+		5804B66870D23D9E758273A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.david.iMoniTests;
+				PRODUCT_NAME = iMoniTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iMoni.app/Contents/MacOS/iMoni";
+			};
+			name = Debug;
+		};
+		A0D433B651E6A16C4980A086 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iMoni/iMoni.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iMoni/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.28.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.david.iMoni;
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+			};
+			name = Release;
+		};
+		A55F427FD51610EC1CE134D8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -188,14 +348,84 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C22CE26062FF5102D7B6E4F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = K9UF7A2D7Y;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -203,69 +433,70 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
-		1A1234567890123456789024 /* Release configuration for PBXNativeTarget "iMoni" */ = {
+		C4090F380C4BACE22BC131DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iMoni/iMoni.entitlements;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 20251121203004;
-				DEAD_CODE_STRIPPING = YES;
-				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
-				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iMoni/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = iMoni;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.27;
+				MARKETING_VERSION = 1.28.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.david.iMoni;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 			};
-			name = Release;
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1A1234567890123456789016 /* Build configuration list for PBXNativeTarget "iMoni" */ = {
+		4ECC780003DB1187E25773F9 /* Build configuration list for PBXNativeTarget "iMoni" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1A1234567890123456789024 /* Release configuration for PBXNativeTarget "iMoni" */,
+				C4090F380C4BACE22BC131DE /* Debug */,
+				A0D433B651E6A16C4980A086 /* Release */,
 			);
-			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
-		1A1234567890123456789020 /* Build configuration list for PBXProject "iMoni" */ = {
+		778608105BD8820366D95895 /* Build configuration list for PBXNativeTarget "iMoniTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1A1234567890123456789022 /* Release configuration for PBXProject "iMoni" */,
+				5804B66870D23D9E758273A5 /* Debug */,
+				45D2921C584AC50C379BFA7A /* Release */,
 			);
-			defaultConfigurationName = Release;
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FCB130A5DBE854983FE2ECCC /* Build configuration list for PBXProject "iMoni" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A55F427FD51610EC1CE134D8 /* Debug */,
+				C22CE26062FF5102D7B6E4F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 1A1234567890123456789019 /* Project object */;
+	rootObject = 1A2A4CA6FE385EA3B802672F /* Project object */;
 }

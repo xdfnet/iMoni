@@ -1,175 +1,173 @@
-#
-#  Makefile
-#  iMoni - AI Service Latency Monitor
-#
-#  Created by iMoni Team
-#  Copyright © 2025 iMoni App. All rights reserved.
-#
-#  项目构建自动化工具
-#
-#  主要功能：
-#  • 一键构建：自动完成构建、安装、启动全流程
-#  • 版本管理：自动递增版本号和生成构建号
-#  • 应用管理：智能检测并关闭运行中的应用实例
-#  • 输出控制：支持多种构建输出模式
-#
-#  使用方法：
-#  • make          - 执行完整构建流程（推荐）
-#  • make build    - 完整构建流程（包含版本递增）
-#  • make build-fixed - 固定版本构建（不递增版本）
-#
-#  输出模式配置（OUTPUT_MODE）：
-#  • 空值          - 标准输出（显示构建进度）
-#  • -quiet        - 静默模式（只显示警告和错误）
-#  • -verbose      - 详细模式（显示所有构建细节）
-#  • > /dev/null   - 完全静默（隐藏所有输出）
-#
+# iMoni Makefile
+# 用于构建 macOS 应用程序
 
-# 项目基本信息
+.PHONY: help debug install push package _update_version _require_msg
+
+# =============================================================================
+# 项目配置
+# =============================================================================
+
 PROJECT_NAME = iMoni
-APP_NAME = iMoni
-SCHEME = iMoni
-CONFIGURATION = Release
+SCHEME_NAME = iMoni
+XCODEPROJ = $(PROJECT_NAME).xcodeproj
+BUILD_DIR = build
+DERIVED_DATA_DIR = ~/Library/Developer/Xcode/DerivedData
+INSTALL_DIR = /Applications
+PACKAGE_DIR = build/packages
 
-# 构建路径配置
-BUILD_DIR = ./build
-PRODUCT_DIR = $(BUILD_DIR)/Build/Products/$(CONFIGURATION)
-APP_BUNDLE = $(PRODUCT_DIR)/$(PROJECT_NAME).app
+# 颜色定义
+RED = \033[0;31m
+GREEN = \033[0;32m
+YELLOW = \033[0;33m
+BLUE = \033[0;34m
+CYAN = \033[0;36m
+NC = \033[0m # No Color
 
-# 配置文件路径
-SOURCE_INFO_PLIST = ./iMoni/Info.plist
+# =============================================================================
+# 默认目标
+# =============================================================================
 
-# 输出模式配置
-OUTPUT_MODE = -quiet
+.DEFAULT_GOAL := help
 
-# 颜色控制 - 支持 macOS 终端
-# 检测是否支持颜色输出
-ifeq ($(shell test -t 0 && echo 1),1)
-    # 支持颜色
-    GREEN = \033[0;32m
-    YELLOW = \033[0;33m
-    RED = \033[0;31m
-    BLUE = \033[0;34m
-    NC = \033[0m
-    # 图标
-    ICON_SUCCESS = ✓
-    ICON_WARNING = ⚠️
-    ICON_ERROR = ✗
-    ICON_INFO = ℹ️
-    ICON_STEP = 🔄
-else
-    # 不支持颜色时使用纯文本
-    GREEN = 
-    YELLOW = 
-    RED = 
-    BLUE = 
-    NC = 
-    ICON_SUCCESS = [OK]
-    ICON_WARNING = [WARN]
-    ICON_ERROR = [ERROR]
-    ICON_INFO = [INFO]
-    ICON_STEP = [STEP]
-endif
+# =============================================================================
+# 帮助信息
+# =============================================================================
 
-.PHONY: build build-fixed step-clear step-close-app step-update-version step-build-app step-install-app step-cleanup step-open-app step-complete
+help:
+	@echo "$(CYAN)iMoni 构建系统$(NC)"
+	@echo "$(CYAN)=================$(NC)"
+	@echo ""
+	@echo "$(GREEN)核心命令:$(NC)"
+	@echo "  $(YELLOW)debug$(NC)       - 构建并运行 Debug 版本"
+	@echo "  $(YELLOW)install$(NC)      - 构建并安装 Release 版本 (不提交)"
+	@echo "  $(YELLOW)package$(NC)      - 打包 Release 为 zip (依赖 install)"
+	@echo "  $(YELLOW)push$(NC)        - 构建、安装、打包、更新版本并推送 (需要 MSG=\"提交信息\")"
+	@echo ""
+	@echo "$(GREEN)使用示例:$(NC)"
+	@echo "  $(CYAN)make debug$(NC)                    - 开发调试"
+	@echo "  $(CYAN)make install$(NC)                  - Release 构建并安装"
+	@echo "  $(CYAN)make package$(NC)                  - 打包 zip"
+	@echo "  $(CYAN)make push MSG=\"修复bug\"$(NC)       - 完整发布流程"
 
-# 默认目标：执行完整构建流程
-all: build
-
-# 清理控制台
-step-clear:
-	@echo "" # 清理控制台
-
-# 第一步：检查并关闭运行中的应用
-step-close-app:
-	@echo "--------------------------------"
-	@echo "$(BLUE)第一步：$(YELLOW)检查并关闭运行中的应用...$(NC)"
-	@echo "--------------------------------"
-	@if pgrep -f "/Applications/$(APP_NAME).app" > /dev/null; then \
-		echo "  $(ICON_STEP) 发现运行中的$(APP_NAME)，正在关闭..."; \
-		pkill -f "/Applications/$(APP_NAME).app" && sleep 1; \
-		echo "$(GREEN)$(ICON_SUCCESS) 应用已关闭$(NC)"; \
-	else \
-		echo "$(GREEN)$(ICON_SUCCESS) 无运行中的应用实例$(NC)"; \
-	fi
-
-# 第二步：更新版本号
-step-update-version:
-	@echo "--------------------------------"
-	@echo "$(BLUE)第二步：$(YELLOW)更新版本号...$(NC)"
-	@echo "--------------------------------"
-	@CURRENT_FULL_VERSION=$$(plutil -extract CFBundleShortVersionString raw "$(SOURCE_INFO_PLIST)" 2>/dev/null || echo "1.00"); \
-	MAJOR=$$(echo $$CURRENT_FULL_VERSION | awk -F. '{print $$1}'); \
-	MINOR=$$(echo $$CURRENT_FULL_VERSION | awk -F. '{print $$2}'); \
-	NEW_MINOR=$$((10#$${MINOR:-0} + 1)); \
-	NEW_VERSION="$${MAJOR:-1}.$$(printf "%02d" $$NEW_MINOR)"; \
-	BUILD_NUMBER=$$(date +%Y%m%d%H%M%S); \
-	echo "$(GREEN)$(ICON_SUCCESS) 版本号已更新：$$CURRENT_FULL_VERSION → $$NEW_VERSION (Build: $$BUILD_NUMBER)$(NC)"; \
-	echo "  正在更新 Info.plist 文件..."; \
-	plutil -replace CFBundleShortVersionString -string "$$NEW_VERSION" "$(SOURCE_INFO_PLIST)"; \
-	plutil -replace CFBundleVersion -string "$$BUILD_NUMBER" "$(SOURCE_INFO_PLIST)"; \
-	echo "$(GREEN)$(ICON_SUCCESS) Info.plist 文件已更新$(NC)"; \
-	echo "  正在更新 Xcode 项目文件..."; \
-	sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $$NEW_VERSION;/g" "$(PROJECT_NAME).xcodeproj/project.pbxproj"; \
-	sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $$BUILD_NUMBER;/g" "$(PROJECT_NAME).xcodeproj/project.pbxproj"; \
-	echo "$(GREEN)$(ICON_SUCCESS) Xcode 项目文件已更新$(NC)"; \
-	echo "  正在更新 README.md 文件..."; \
-	sed -i '' "s/\[!\[Version\](https:\/\/img\.shields\.io\/badge\/Version-[^-]*-green\.svg)\]/\[![Version](https:\/\/img.shields.io\/badge\/Version-$$NEW_VERSION-green.svg)\]/g" README.md; \
-	sed -i '' "s/### 最新功能 (v[0-9]*\.[0-9]*)/### 最新功能 (v$$NEW_VERSION)/g" README.md; \
-	echo "$(GREEN)$(ICON_SUCCESS) README.md 文件已更新$(NC)"
-
-# 第三步：构建应用
-step-build-app:
-	@echo "--------------------------------"
-	@echo "$(BLUE)第三步：$(YELLOW)构建 $(APP_NAME)...$(NC)"
-	@echo "--------------------------------"
-	@xcodebuild -project $(PROJECT_NAME).xcodeproj -scheme $(SCHEME) -configuration $(CONFIGURATION) -derivedDataPath $(BUILD_DIR) build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO $(OUTPUT_MODE)
-	@if [ -d "$(APP_BUNDLE)" ]; then \
-		echo "$(GREEN)$(ICON_SUCCESS) 构建成功$(NC)"; \
-	else \
-		echo "$(RED)$(ICON_ERROR) 构建失败$(NC)"; \
-		exit 1; \
-	fi
-
-# 第四步：安装应用到 /Applications
-step-install-app:
-	@echo "--------------------------------"
-	@echo "$(BLUE)第四步：$(YELLOW)安装应用到 /Applications...$(NC)"
-	@echo "--------------------------------"
-	@rm -rf "/Applications/$(APP_NAME).app"
-	@cp -R "$(APP_BUNDLE)" "/Applications/$(APP_NAME).app"
-	@if [ -d "/Applications/$(APP_NAME).app" ]; then \
-		echo "$(GREEN)$(ICON_SUCCESS) 应用安装成功：/Applications/$(APP_NAME).app$(NC)"; \
-	else \
-		echo "$(RED)$(ICON_ERROR) 应用安装失败$(NC)"; \
-		exit 1; \
-	fi
-
-# 第五步：清理构建文件
-step-cleanup:
-	@echo "--------------------------------"
-	@echo "$(BLUE)第五步：$(YELLOW)清理构建文件...$(NC)"
-	@echo "--------------------------------"
+debug:
+	@echo "$(BLUE)开始 Debug 构建和运行...$(NC)"
+	@echo "$(YELLOW)1. 停止运行中的应用...$(NC)"
+	@pkill -f "$(PROJECT_NAME)" 2>/dev/null || true
+	@echo "$(YELLOW)2. 清理构建文件...$(NC)"
 	@rm -rf $(BUILD_DIR)
-	@echo "$(GREEN)$(ICON_SUCCESS) 清理完成$(NC)"
+	@rm -rf $(DERIVED_DATA_DIR)/$(PROJECT_NAME)-*
+	@echo "$(GREEN)清理完成$(NC)"
+	@echo "$(YELLOW)3. 生成 Xcode 工程...$(NC)"
+	@xcodegen generate
+	@echo "$(GREEN)Xcode 工程已生成$(NC)"
+	@echo "$(YELLOW)4. 构建 Debug 版本...$(NC)"
+	@BUILD_NUMBER=$$(date +%Y%m%d%H%M%S); \
+	xcodebuild \
+		-project $(XCODEPROJ) \
+		-scheme $(SCHEME_NAME) \
+		-configuration Debug \
+		-derivedDataPath $(BUILD_DIR) \
+		-destination 'platform=macOS' \
+		CURRENT_PROJECT_VERSION=$$BUILD_NUMBER \
+		build
+	@echo "$(GREEN)Debug 构建完成$(NC)"
 
-# 第六步：打开应用
-step-open-app:
-	@echo "--------------------------------"
-	@echo "$(BLUE)第六步：$(YELLOW)打开应用...$(NC)"
-	@echo "--------------------------------"
-	@open "/Applications/$(APP_NAME).app"
+	@echo "$(YELLOW)5. 启动 Debug 应用...$(NC)"
+	@APP_PATH=$$(find $(BUILD_DIR) -name "$(PROJECT_NAME).app" -type d | head -1); \
+	if [ -n "$$APP_PATH" ]; then \
+		open "$$APP_PATH"; \
+		echo "$(GREEN)应用已启动$(NC)"; \
+	else \
+		echo "$(RED)找不到构建的应用程序$(NC)"; \
+		exit 1; \
+	fi
 
-# 第七步：完成
-step-complete:
-	@echo "--------------------------------"
-	@echo "$(BLUE)第七步：$(YELLOW)完成$(NC)"
-	@echo "--------------------------------"
+install:
+	@echo "$(BLUE)开始 Release 构建安装...$(NC)"
+	@echo "$(YELLOW)1. 停止运行中的应用...$(NC)"
+	@pkill -f "$(PROJECT_NAME)" 2>/dev/null || true
+	@echo "$(YELLOW)2. 卸载旧版本...$(NC)"
+	@rm -rf "$(INSTALL_DIR)/$(PROJECT_NAME).app" 2>/dev/null || true
+	@echo "$(GREEN)旧版本已卸载$(NC)"
+	@echo "$(YELLOW)3. 清理构建文件...$(NC)"
+	@rm -rf $(BUILD_DIR)
+	@rm -rf $(DERIVED_DATA_DIR)/$(PROJECT_NAME)-*
+	@echo "$(GREEN)清理完成$(NC)"
+	@echo "$(YELLOW)4. 生成 Xcode 工程...$(NC)"
+	@xcodegen generate
+	@echo "$(GREEN)Xcode 工程已生成$(NC)"
+	@echo "$(YELLOW)5. 构建 Release 版本...$(NC)"
+	@BUILD_NUMBER=$$(date +%Y%m%d%H%M%S); \
+	xcodebuild \
+		-project $(XCODEPROJ) \
+		-target $(SCHEME_NAME) \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		CURRENT_PROJECT_VERSION=$$BUILD_NUMBER \
+		build
+	@echo "$(GREEN)Release 构建完成$(NC)"
 
-# 主构建流程（包含版本号递增）
-build: step-clear step-close-app step-update-version step-build-app step-install-app step-cleanup step-open-app step-complete
+	@echo "$(YELLOW)6. 安装到 Applications...$(NC)"
+	@APP_PATH=$$(find $(BUILD_DIR) -name "$(PROJECT_NAME).app" -type d | head -1); \
+	if [ -n "$$APP_PATH" ]; then \
+		cp -R "$$APP_PATH" $(INSTALL_DIR)/; \
+		echo "$(GREEN)安装完成: $(INSTALL_DIR)/$(PROJECT_NAME).app$(NC)"; \
+	else \
+		echo "$(RED)错误: 找不到构建的应用程序$(NC)"; \
+		exit 1; \
+	fi
 
-# 固定版本构建流程（不递增版本号）
-build-fixed: step-clear step-close-app step-build-app step-install-app step-cleanup step-open-app step-complete
+	@echo "$(YELLOW)7. 保存 App 路径以供打包使用...$(NC)"
+	@echo "APP_PATH=$(INSTALL_DIR)/$(PROJECT_NAME).app" > $(BUILD_DIR)/.app_path
 
+_require_msg:
+	@if [ -z "$(MSG)" ]; then \
+		echo "$(RED)错误: 请提供提交信息$(NC)"; \
+		echo "$(YELLOW)使用方法: make push MSG=\"提交信息\"$(NC)"; \
+		exit 1; \
+	fi
 
+_update_version:
+	@echo "$(YELLOW)更新 project.yml 版本信息...$(NC)"
+	@CURRENT_VERSION=$$(grep "MARKETING_VERSION:" project.yml | head -1 | awk '{print $$2}' | tr -d '"'); \
+	if [ -z "$$CURRENT_VERSION" ]; then \
+		echo "$(RED)错误: 无法从 project.yml 获取当前版本$(NC)"; \
+		exit 1; \
+	fi; \
+	echo "$(CYAN)当前版本: $$CURRENT_VERSION$(NC)"; \
+	MAJOR=$$(echo $$CURRENT_VERSION | cut -d. -f1); \
+	MINOR=$$(echo $$CURRENT_VERSION | cut -d. -f2); \
+	PATCH=$$(echo $$CURRENT_VERSION | cut -d. -f3 2>/dev/null || echo "0"); \
+	NEW_PATCH=$$((PATCH + 1)); \
+	NEW_VERSION="$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	echo "$(CYAN)新版本: $$NEW_VERSION$(NC)"; \
+	sed -i '' "s/MARKETING_VERSION: \"[^\"]*\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
+	sed -i '' "s/CURRENT_PROJECT_VERSION: [0-9]*/CURRENT_PROJECT_VERSION: 1/g" project.yml; \
+	echo "$(GREEN)project.yml 版本信息已更新$(NC)"
+
+push: _require_msg _update_version install package
+	@echo "$(YELLOW)提交并推送...$(NC)"
+	@git add .
+	@git commit -m "$(MSG)"
+	@echo "$(GREEN)提交完成: $(MSG)$(NC)"
+	@git push
+	@echo "$(GREEN)推送完成$(NC)"
+
+package:
+	@echo "$(BLUE)打包 Release 为 zip...$(NC)"
+	@mkdir -p "$(PACKAGE_DIR)"
+	@if [ -f $(BUILD_DIR)/.app_path ]; then \
+		APP_PATH=$$(cat $(BUILD_DIR)/.app_path | cut -d= -f2); \
+	else \
+		APP_PATH=$$(find $(BUILD_DIR) -name "$(PROJECT_NAME).app" -type d | head -1); \
+	fi; \
+	if [ -z "$$APP_PATH" ]; then \
+		echo "$(RED)错误: 找不到构建的应用程序$(NC)"; \
+		exit 1; \
+	fi; \
+	version=$$(plutil -extract CFBundleShortVersionString raw "$$APP_PATH/Contents/Info.plist" 2>/dev/null || echo "1.0.0"); \
+	build=$$(plutil -extract CFBundleVersion raw "$$APP_PATH/Contents/Info.plist" 2>/dev/null || echo "0"); \
+	zip_path="$(PACKAGE_DIR)/$(PROJECT_NAME)-$$version-$$build.zip"; \
+	rm -f "$$zip_path"; \
+	ditto -c -k --keepParent "$$APP_PATH" "$$zip_path"; \
+	echo "$(GREEN)已创建: $$zip_path$(NC)"
