@@ -40,8 +40,6 @@ class BaseMonitor: BaseMonitorProtocol {
     /// 监控间隔
     internal var monitoringInterval: TimeInterval
     
-
-    
     /// 监控状态锁（线程安全）
     private let monitoringLock = NSLock()
     
@@ -147,5 +145,4 @@ class BaseMonitor: BaseMonitorProtocol {
         // 默认实现为空，子类可以重写
     }
 }
-
 

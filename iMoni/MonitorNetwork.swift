@@ -26,14 +26,17 @@ protocol MonitorNetworkDelegate: AnyObject {
 }
 
 class MonitorNetwork: BaseMonitor {
-    
+
     // MARK: - 属性
-    
+
     weak var delegate: MonitorNetworkDelegate?
-    
+
     private var lastBytesReceived: UInt64 = 0
     private var lastBytesSent: UInt64 = 0
     private var lastUpdateTime: CFAbsoluteTime = 0
+
+    /// 线程安全锁
+    private let statsLock = NSLock()
     
     // MARK: - 初始化
     
@@ -48,9 +51,11 @@ class MonitorNetwork: BaseMonitor {
         // 初始化上次值
         do {
             let (totalReceived, totalSent) = try getTotalNetworkBytes()
+            statsLock.lock()
             lastBytesReceived = totalReceived
             lastBytesSent = totalSent
             lastUpdateTime = Utilities.currentTimestamp()
+            statsLock.unlock()
         } catch {
             delegate?.networkStats(self, didFailWithError: ConnectionStatus.disconnected)
             return
@@ -59,13 +64,15 @@ class MonitorNetwork: BaseMonitor {
         updateInterval(interval)
         super.startMonitoring()
     }
-    
+
     /// 停止监控
     override func stopMonitoring() {
         super.stopMonitoring()
+        statsLock.lock()
         lastBytesReceived = 0
         lastBytesSent = 0
         lastUpdateTime = 0
+        statsLock.unlock()
     }
     
     // MARK: - BaseMonitor 实现
@@ -83,29 +90,36 @@ class MonitorNetwork: BaseMonitor {
     /// 计算下载和上传速率并回调（MB/s）
     private func updateNetworkSpeeds() {
         let currentTime = Utilities.currentTimestamp()
-        let timeElapsed = Utilities.timeDifference(from: lastUpdateTime)
-        
+
+        // 读取上次的统计值（需要加锁）
+        statsLock.lock()
+        let lastTime = lastUpdateTime
+        let lastReceived = lastBytesReceived
+        let lastSent = lastBytesSent
+        statsLock.unlock()
+
+        let timeElapsed = currentTime - lastTime
         guard timeElapsed > 0 else { return }
-        
+
         do {
             let (currentReceived, currentSent) = try getTotalNetworkBytes()
-            
+
             // 检查数据有效性
-            guard currentReceived >= lastBytesReceived, currentSent >= lastBytesSent else {
+            guard currentReceived >= lastReceived, currentSent >= lastSent else {
                 // 字节数减少，可能是网络接口重置，重新初始化
                 logNetworkInterfaceReset()
                 resetNetworkStats()
                 return
             }
-            
-            let receivedDiff = currentReceived - lastBytesReceived
-            let sentDiff = currentSent - lastBytesSent
-            
+
+            let receivedDiff = currentReceived - lastReceived
+            let sentDiff = currentSent - lastSent
+
             // 转换为 MB/s (1000 * 1000 = 1,000,000 bytes per MB - 十进制标准)
             let bytesPerMB: Double = 1000.0 * 1000.0
             let downloadSpeedMBps = Double(receivedDiff) / timeElapsed / bytesPerMB
             let uploadSpeedMBps = Double(sentDiff) / timeElapsed / bytesPerMB
-            
+
             // 验证速度值的合理性
             guard downloadSpeedMBps >= 0 && downloadSpeedMBps <= MonitorConstants.maxReasonableSpeed,
                   uploadSpeedMBps >= 0 && uploadSpeedMBps <= MonitorConstants.maxReasonableSpeed else {
@@ -114,22 +128,25 @@ class MonitorNetwork: BaseMonitor {
                 return
             }
 
+            // 更新统计值（需要加锁）
+            statsLock.lock()
+            lastBytesReceived = currentReceived
+            lastBytesSent = currentSent
+            lastUpdateTime = currentTime
+            statsLock.unlock()
+
             // 实时更新显示，不缓存
             Utilities.safeMainQueueCallback { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.networkStats(self, didUpdateDownloadSpeed: downloadSpeedMBps, uploadSpeed: uploadSpeedMBps)
             }
-            
-            lastBytesReceived = currentReceived
-            lastBytesSent = currentSent
-            lastUpdateTime = currentTime
-            
+
         } catch {
             Utilities.safeMainQueueCallback { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.networkStats(self, didFailWithError: ConnectionStatus.disconnected)
             }
-            
+
             logNetworkError(error)
         }
     }
@@ -138,9 +155,11 @@ class MonitorNetwork: BaseMonitor {
     private func resetNetworkStats() {
         do {
             let (totalReceived, totalSent) = try getTotalNetworkBytes()
+            statsLock.lock()
             lastBytesReceived = totalReceived
             lastBytesSent = totalSent
             lastUpdateTime = Utilities.currentTimestamp()
+            statsLock.unlock()
         } catch {
             logNetworkError(error)
         }
@@ -172,70 +191,87 @@ class MonitorNetwork: BaseMonitor {
         var totalReceivedBytes: UInt64 = 0
         var totalSentBytes: UInt64 = 0
 
-        // 系统调用参数 - 使用固定数组避免临时指针问题
+        // 系统调用参数
         let mib: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
+
+        // 结构体大小常量
         let ifmSize = MemoryLayout<if_msghdr>.size
         let if2mSize = MemoryLayout<if_msghdr2>.size
+        // 合理的最大消息长度（防止恶意数据）
+        let maxMessageSize = 65536
 
         // 第一次调用：获取所需缓冲区大小
         var len: size_t = 0
-        
-        // 使用 withUnsafeMutableBytes 安全地传递指针
+
         let sysctlResult = mib.withUnsafeBufferPointer { mibBuffer in
-            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress), 
-                   UInt32(mib.count), 
-                   nil, 
-                   &len, 
-                   nil, 
+            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress),
+                   UInt32(mib.count),
+                   nil,
+                   &len,
+                   nil,
                    0)
         }
-        
-        guard sysctlResult >= 0 else {
+
+        guard sysctlResult >= 0, len > 0 else {
             throw NetworkError.sysctlFailed
         }
 
         // 分配缓冲区并获取数据
         var buffer = [CChar](repeating: 0, count: len)
-        
-        // 再次使用 withUnsafeMutableBytes 安全地传递指针
+
         let sysctlResult2 = mib.withUnsafeBufferPointer { mibBuffer in
-            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress), 
-                   UInt32(mib.count), 
-                   &buffer, 
-                   &len, 
-                   nil, 
+            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress),
+                   UInt32(mib.count),
+                   &buffer,
+                   &len,
+                   nil,
                    0)
         }
-        
+
         guard sysctlResult2 >= 0 else {
             throw NetworkError.sysctlFailed
         }
 
-        // 解析网络接口信息
-        var offset = 0
-        while offset + ifmSize <= len {
-            let ifm = buffer.withUnsafeBytes { ptr in
-                ptr.load(fromByteOffset: offset, as: if_msghdr.self)
-            }
+        // 安全解析网络接口信息
+        buffer.withUnsafeBytes { (rawPtr: UnsafeRawBufferPointer) in
+            var offset = 0
 
-            // 确保有足够空间读取 if_msghdr2
-            if offset + if2mSize <= len && ifm.ifm_type == RTM_IFINFO2 {
-                let if2m = buffer.withUnsafeBytes { ptr in
-                    ptr.load(fromByteOffset: offset, as: if_msghdr2.self)
+            while offset < len {
+                // 确保有足够空间读取基本头部
+                guard offset + ifmSize <= len else { break }
+
+                // 安全读取 if_msghdr 头部
+                let baseAddr = rawPtr.baseAddress!.advanced(by: offset)
+                let ifm = baseAddr.load(as: if_msghdr.self)
+                let msgLen = Int(ifm.ifm_msglen)
+
+                // 验证消息长度合理性
+                guard msgLen >= ifmSize, msgLen <= maxMessageSize,
+                      offset + msgLen <= len else {
+                    break
                 }
 
-                // 只考虑活跃的非回环接口
-                if (if2m.ifm_flags & IFF_UP) != 0 && (if2m.ifm_flags & IFF_LOOPBACK) == 0 {
-                    totalReceivedBytes += if2m.ifm_data.ifi_ibytes  // 接收字节数
-                    totalSentBytes += if2m.ifm_data.ifi_obytes    // 发送字节数
-                }
-            }
+                // 只处理 RTM_IFINFO2 类型消息
+                if ifm.ifm_type == RTM_IFINFO2 {
+                    // 确保有足够空间读取完整的 if_msghdr2
+                    guard offset + if2mSize <= len else { break }
 
-            // 确保不越界
-            guard ifm.ifm_msglen > 0 && offset + Int(ifm.ifm_msglen) <= len else {
-                break
+                    // 安全读取 if_msghdr2
+                    let if2m = baseAddr.load(as: if_msghdr2.self)
+
+                    // 只考虑活跃的非回环接口
+                    let upFlag = Int32(IFF_UP)
+                    let loopbackFlag = Int32(IFF_LOOPBACK)
+
+                    if (if2m.ifm_flags & upFlag) != 0 &&
+                       (if2m.ifm_flags & loopbackFlag) == 0 {
+                        totalReceivedBytes += if2m.ifm_data.ifi_ibytes
+                        totalSentBytes += if2m.ifm_data.ifi_obytes
+                    }
+                }
+
+                offset += msgLen
             }
-            offset += Int(ifm.ifm_msglen)
         }
 
         return (totalReceivedBytes, totalSentBytes)

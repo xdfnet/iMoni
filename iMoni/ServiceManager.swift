@@ -57,9 +57,9 @@ class ServiceManager {
 
         // IDE Services
         let ideServices = [
-            ServiceEndpoint(name: "Cursor", host: "api.cursor.com", port: 443),
+            ServiceEndpoint(name: "Cursor", host: "api.cursor.sh", port: 443),
             ServiceEndpoint(name: "Visual Studio Code", host: "marketplace.visualstudio.com", port: 443),
-            ServiceEndpoint(name: "Windsurf", host: "windsurf.ai", port: 443),
+            ServiceEndpoint(name: "Windsurf", host: "api.windsurf.sh", port: 443),
         ]
 
         // Development — Homebrew 与 NPM 相关

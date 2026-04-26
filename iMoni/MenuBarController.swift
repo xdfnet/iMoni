@@ -30,8 +30,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private var statusBarItem: NSStatusItem?
     
     /// 监控服务
-    private let monitor = MonitorLatency(queueLabel: MonitorConstants.latencyQueueLabel, interval: MonitorConstants.defaultLatencyInterval)
-    private let networkStats = MonitorNetwork(queueLabel: MonitorConstants.networkQueueLabel, interval: MonitorConstants.defaultNetworkInterval)
+    private let latencyMonitor = MonitorLatency(queueLabel: MonitorConstants.latencyQueueLabel, interval: MonitorConstants.defaultLatencyInterval)
+    private let networkMonitor = MonitorNetwork(queueLabel: MonitorConstants.networkQueueLabel, interval: MonitorConstants.defaultNetworkInterval)
     
     /// 状态数据
     private var currentEndpoint: ServiceEndpoint?
@@ -74,15 +74,15 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     // MARK: - 生命周期管理
     
     func cleanup() {
-        monitor.stopMonitoring()
-        networkStats.stopMonitoring()
+        latencyMonitor.stopMonitoring()
+        networkMonitor.stopMonitoring()
         statusBarItem = nil
     }
 
     /// 系统即将睡眠：暂停监控并移除状态栏项，防止唤醒后按钮丢失/无响应
     func suspend() {
-        monitor.stopMonitoring()
-        networkStats.stopMonitoring()
+        latencyMonitor.stopMonitoring()
+        networkMonitor.stopMonitoring()
         statusBarItem = nil
     }
 
@@ -112,9 +112,9 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     /// 绑定代理与基础参数
     private func setupMonitor() {
-        monitor.delegate = self
-        monitor.updateInterval(currentMonitoringInterval)
-        networkStats.delegate = self
+        latencyMonitor.delegate = self
+        latencyMonitor.updateInterval(currentMonitoringInterval)
+        networkMonitor.delegate = self
     }
     
     /// 设置默认监控状态
@@ -136,7 +136,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
                 Utilities.debugPrint("警告: 没有可用的服务端点")
             }
         } else {
-            networkStats.startMonitoring(interval: currentMonitoringInterval)
+            networkMonitor.startMonitoring(interval: currentMonitoringInterval)
         }
     }
     
@@ -144,12 +144,12 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private func updateMonitoringState() {
         if currentDisplayMode == .serviceLatency {
             if let endpoint = currentEndpoint {
-                monitor.startMonitoring(endpoint)
+                latencyMonitor.startMonitoring(endpoint)
             }
-            networkStats.stopMonitoring()
+            networkMonitor.stopMonitoring()
         } else {
-            monitor.stopMonitoring()
-            networkStats.startMonitoring(interval: currentMonitoringInterval)
+            latencyMonitor.stopMonitoring()
+            networkMonitor.startMonitoring(interval: currentMonitoringInterval)
         }
     }
     
@@ -341,35 +341,27 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     /// 从用户偏好读取当前模式和服务
     private func loadSettings() {
-        let defaults = UserDefaults.standard
-        
         // 加载显示模式
-        if let rawValue = defaults.string(forKey: "currentDisplayMode"),
-           let mode = DisplayMode(rawValue: rawValue) {
-            currentDisplayMode = mode
-        }
-        
+        currentDisplayMode = ConfigurationManager.shared.getDisplayMode()
+
         // 加载监控间隔
-        if let interval = defaults.object(forKey: "currentMonitoringInterval") as? TimeInterval {
-            currentMonitoringInterval = interval
-        }
-        
+        currentMonitoringInterval = ConfigurationManager.shared.getMonitoringInterval()
+
         // 加载上次选择的服务
-        if let savedServiceName = defaults.string(forKey: "lastSelectedService") {
+        if let savedServiceName = ConfigurationManager.shared.getLastSelectedService() {
             if let savedEndpoint = ServiceManager.shared.endpoints.first(where: { $0.name == savedServiceName }) {
                 currentEndpoint = savedEndpoint
             }
         }
     }
     
-    /// 将当前模式和服务写入用户偏好
+    /// 将当前模式和服务写入 ConfigurationManager
     private func saveSettings() {
-        let defaults = UserDefaults.standard
-        defaults.set(currentDisplayMode.rawValue, forKey: "currentDisplayMode")
-        defaults.set(currentMonitoringInterval, forKey: "currentMonitoringInterval")
-        
+        ConfigurationManager.shared.setDisplayMode(currentDisplayMode)
+        ConfigurationManager.shared.setMonitoringInterval(currentMonitoringInterval)
+
         if let endpoint = currentEndpoint {
-            defaults.set(endpoint.name, forKey: "lastSelectedService")
+            ConfigurationManager.shared.setLastSelectedService(endpoint.name)
         }
     }
     
@@ -378,7 +370,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     /// 切换服务端点并立即开始延迟监控
     private func switchToEndpoint(_ endpoint: ServiceEndpoint) {
         currentEndpoint = endpoint
-        monitor.startMonitoring(endpoint)
+        latencyMonitor.startMonitoring(endpoint)
         updateCombinedDisplay()
         saveSettings()  // 保存服务选择
     }
@@ -387,30 +379,30 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     
     /// 汇总当前需要显示的文本并更新到状态栏
     private func updateCombinedDisplay() {
-        let attributedDisplayText = createAttributedDisplayText()
-        let statusIcon = createStatusIcon()
-        
+        let displayText = createDisplayText()
+
         Utilities.safeMainQueueCallback { [weak self] in
             guard let self = self else { return }
-            
+
             if let button = self.statusBarItem?.button {
-                button.attributedTitle = attributedDisplayText
-                button.image = statusIcon
-                
-                // 设置工具提示
+                button.title = displayText
                 button.toolTip = self.createTooltip()
             }
         }
     }
-    
-    /// 创建状态图标
-    private func createStatusIcon() -> NSImage? {
-        if connectionStatus == .connected {
-            // 连接成功显示检查图标
-            return NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: "Connected")
-        } else {
-            // 连接失败显示警告图标
-            return NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Disconnected")
+
+    /// 创建显示文本（纯文字，不使用图片）
+    private func createDisplayText() -> String {
+        switch currentDisplayMode {
+        case .serviceLatency:
+            let serviceName = currentEndpoint?.name ?? AppConstants.defaultValue
+            if connectionStatus != .connected {
+                return "\(serviceName): \(AppConstants.defaultValue)"
+            }
+            return "\(serviceName): \(Utilities.formatLatency(rawLatency))"
+
+        case .networkSpeed:
+            return "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)"
         }
     }
     
@@ -442,43 +434,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         
         return tooltip
     }
-    
-    /// 创建带属性的显示文本
-    private func createAttributedDisplayText() -> NSAttributedString {
-        switch currentDisplayMode {
-        case .serviceLatency:
-            let serviceName = currentEndpoint?.name ?? AppConstants.defaultValue
-            
-            if connectionStatus != .connected {
-                return NSAttributedString(string: "\(serviceName): \(AppConstants.defaultValue)")
-            }
-            
-            // 根据延迟确定颜色
-            let latencyColor: NSColor
-            if rawLatency > 500 {
-                latencyColor = .systemRed
-            } else if rawLatency > 200 {
-                latencyColor = .systemOrange
-            } else {
-                latencyColor = .labelColor
-            }
-            
-            let latencyString = Utilities.formatLatency(rawLatency)
-            let fullString = "\(serviceName): \(latencyString)"
-            let attributedString = NSMutableAttributedString(string: fullString)
-            
-            // 只对延迟部分应用颜色
-            let range = (fullString as NSString).range(of: latencyString)
-            attributedString.addAttribute(.foregroundColor, value: latencyColor, range: range)
-            
-            return attributedString
-            
-        case .networkSpeed:
-            return NSAttributedString(string: "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)")
-        }
-    }
-    
-
     
     // MARK: - MonitorLatencyDelegate
     

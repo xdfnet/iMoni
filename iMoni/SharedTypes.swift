@@ -74,11 +74,11 @@ enum ConnectionStatus {
 struct MonitorConstants {
     // 连接超时
     static let connectionTimeout: TimeInterval = 0.5
-    
-    // 监控间隔
-    static let defaultLatencyInterval: TimeInterval = 0.5
+
+    // 监控间隔（统一使用 defaultUserInterval 作为默认值）
+    static let defaultLatencyInterval: TimeInterval = 0.1
     static let defaultNetworkInterval: TimeInterval = 0.1
-    
+
     // 用户可配置的监控间隔选项
     static let availableIntervals: [TimeInterval] = [0.1, 0.5, 1.0, 2.0, 5.0]
     static let defaultUserInterval: TimeInterval = 0.1
@@ -94,8 +94,7 @@ struct MonitorConstants {
     // 网络监控配置
     static let maxReasonableSpeed: Double = 1000.0  // 1000 MB/s（十进制）作为合理速度上限
 
-    // 网络接口配置
-    static let networkInterfaceFlags: Int32 = IFF_UP | IFF_LOOPBACK
+    // 网络接口配置（预留，当前代码中直接使用 IFF_UP 等常量）
     static let activeInterfaceFlags: Int32 = IFF_UP
 }
 
