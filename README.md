@@ -1,9 +1,9 @@
 # iMoni - AI 服务延迟监控工具
 
-[![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)](https://swift.org)
-[![macOS](https://img.shields.io/badge/macOS-15.0+-blue.svg)](https://developer.apple.com/macos/)
-[![Version](https://img.shields.io/badge/version-v1.28.6-green.svg)](https://github.com/xdfnet/iMoni)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/xdfnet/iMoni?style=flat-square)](https://github.com/xdfnet/iMoni/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-15.0+-green.svg)](https://www.apple.com/macos/)
+[![Swift](https://img.shields.io/badge/Swift-6.2+-orange.svg)](https://swift.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ## 项目简介
 
