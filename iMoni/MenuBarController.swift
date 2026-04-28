@@ -1,49 +1,23 @@
-//
-//  MenuBarController.swift
-//  iMoni
-//
-//  Created by iMoni Team
-//  Copyright © 2025 iMoni App. All rights reserved.
-//
-//  菜单栏控制器：负责状态栏文本展示与菜单交互
-//
-//  功能说明：
-//  - 组合并展示当前模式下的状态文本（服务延迟 / 网络速度）
-//  - 构建并响应菜单项（显示模式、服务选择、版本/构建信息、退出）
-//  - 协调 MonitorLatency 与 MonitorNetwork 的启停
-//
 import Cocoa
 import SwiftUI
 
-// MARK: - 显示模式枚举
 enum DisplayMode: String, CaseIterable {
     case serviceLatency = "Service"
     case networkSpeed = "Network"
 }
 
-// MARK: - 菜单栏控制器
 class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate {
-    
-    // MARK: - 属性
-    
-    /// UI 组件
     private var statusBarItem: NSStatusItem?
-    
-    /// 监控服务
+
     private let latencyMonitor = MonitorLatency(queueLabel: MonitorConstants.latencyQueueLabel, interval: MonitorConstants.defaultLatencyInterval)
     private let networkMonitor = MonitorNetwork(queueLabel: MonitorConstants.networkQueueLabel, interval: MonitorConstants.defaultNetworkInterval)
-    
-    /// 状态数据
+
     private var currentEndpoint: ServiceEndpoint?
     private var rawLatency: TimeInterval = 0.0
     private var currentDownloadSpeed: String = AppConstants.defaultValue
     private var currentUploadSpeed: String = AppConstants.defaultValue
-    
-    /// 状态指示器
     private var connectionStatus: ConnectionStatus = .disconnected
-    private var isHealthy: Bool = true
-    
-    /// 当前展示模式（切换时联动启停对应监控）
+
     private var currentDisplayMode: DisplayMode = .serviceLatency {
         didSet {
             saveSettings()
@@ -51,17 +25,14 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             updateMonitoringState()
         }
     }
-    
-    /// 当前监控间隔（用户可配置）
+
     private var currentMonitoringInterval: TimeInterval = MonitorConstants.defaultUserInterval {
         didSet {
             saveSettings()
             updateMonitoringState()
         }
     }
-    
-    // MARK: - 初始化
-    
+
     override init() {
         super.init()
         loadSettings()
@@ -70,77 +41,58 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         setupDefaultMonitoring()
         updateCombinedDisplay()
     }
-    
-    // MARK: - 生命周期管理
-    
+
     func cleanup() {
         latencyMonitor.stopMonitoring()
         networkMonitor.stopMonitoring()
         statusBarItem = nil
     }
 
-    /// 系统即将睡眠：暂停监控并移除状态栏项，防止唤醒后按钮丢失/无响应
     func suspend() {
         latencyMonitor.stopMonitoring()
         networkMonitor.stopMonitoring()
         statusBarItem = nil
     }
 
-    /// 系统唤醒后：重建状态栏项并恢复监控
     func resumeAfterWake() {
-        // 重新创建状态栏按钮
         if statusBarItem == nil {
             setupStatusBar()
         }
-        // 恢复监控状态
         updateMonitoringState()
         updateCombinedDisplay()
     }
-    
-    // MARK: - 私有方法
-    
-    /// 初始化状态栏按钮（等宽字体避免数值跳动）
+
     private func setupStatusBar() {
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        
         if let button = statusBarItem?.button {
             button.font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
             button.action = #selector(statusBarButtonClicked)
             button.target = self
         }
     }
-    
-    /// 绑定代理与基础参数
+
     private func setupMonitor() {
         latencyMonitor.delegate = self
         latencyMonitor.updateInterval(currentMonitoringInterval)
         networkMonitor.delegate = self
     }
-    
-    /// 设置默认监控状态
+
     private func setupDefaultMonitoring() {
         if currentDisplayMode == .serviceLatency {
-            // 优先使用已保存的服务，如果没有则默认选择 Claude
             if let endpoint = currentEndpoint {
-                Utilities.debugPrint("使用已保存的服务: \(endpoint.name)")
                 switchToEndpoint(endpoint)
             } else if let claudeEndpoint = ServiceManager.shared.endpoints.first(where: { $0.name == "Claude" }) {
-                Utilities.debugPrint("使用默认服务: Claude")
                 currentEndpoint = claudeEndpoint
                 switchToEndpoint(claudeEndpoint)
             } else if let firstEndpoint = ServiceManager.shared.endpoints.first {
-                Utilities.debugPrint("使用第一个可用服务: \(firstEndpoint.name)")
                 currentEndpoint = firstEndpoint
                 switchToEndpoint(firstEndpoint)
-            } else {
-                Utilities.debugPrint("警告: 没有可用的服务端点")
             }
         } else {
             networkMonitor.startMonitoring(interval: currentMonitoringInterval)
         }
     }
-    
-    /// 更新监控状态
+
     private func updateMonitoringState() {
         if currentDisplayMode == .serviceLatency {
             if let endpoint = currentEndpoint {
@@ -152,246 +104,161 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             networkMonitor.startMonitoring(interval: currentMonitoringInterval)
         }
     }
-    
-    /// 点击状态栏按钮时动态创建菜单（避免菜单粘连）
+
     @objc private func statusBarButtonClicked() {
         statusBarItem?.menu = createMenu()
         statusBarItem?.button?.performClick(nil)
         statusBarItem?.menu = nil
     }
-    
-    /// 构建主菜单
+
     private func createMenu() -> NSMenu {
         let menu = NSMenu()
-        
-        // 显示模式选择
         menu.addItem(createDisplayModeMenu())
         menu.addItem(NSMenuItem.separator())
-        
-        // 直接加入三个服务分类
         for category in ServiceManager.shared.categories {
             menu.addItem(createServiceCategoryMenu(for: category))
         }
         menu.addItem(NSMenuItem.separator())
-        
-        // 监控间隔设置
         menu.addItem(createMonitoringIntervalMenu())
         menu.addItem(NSMenuItem.separator())
-        
-        // About 信息
         menu.addItem(createAboutMenu())
         menu.addItem(NSMenuItem.separator())
-        
-        // 退出
         menu.addItem(createQuitMenu())
-        
         return menu
     }
-    
-    /// 创建显示模式菜单
+
     private func createDisplayModeMenu() -> NSMenuItem {
-        let displayModeItem = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
-        let displayModeSubmenu = NSMenu()
-        
+        let item = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
         for mode in DisplayMode.allCases {
-            let item = NSMenuItem(
-                title: mode.rawValue,
-                action: #selector(displayModeSelected(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.representedObject = mode.rawValue
-            item.state = (currentDisplayMode == mode) ? .on : .off
-            displayModeSubmenu.addItem(item)
+            let menuItem = NSMenuItem(title: mode.rawValue, action: #selector(displayModeSelected(_:)), keyEquivalent: "")
+            menuItem.target = self
+            menuItem.representedObject = mode.rawValue
+            menuItem.state = (currentDisplayMode == mode) ? .on : .off
+            submenu.addItem(menuItem)
         }
-        
-        displayModeItem.submenu = displayModeSubmenu
-        return displayModeItem
+        item.submenu = submenu
+        return item
     }
-    
-    /// 创建监控间隔设置菜单
+
     private func createMonitoringIntervalMenu() -> NSMenuItem {
-        let intervalItem = NSMenuItem(title: "Rate", action: nil, keyEquivalent: "")
-        let intervalSubmenu = NSMenu()
-        
-        // 使用 MonitorConstants 中定义的可用间隔
+        let item = NSMenuItem(title: "Rate", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
         for interval in MonitorConstants.availableIntervals {
-            let title: String
-            if interval < 1.0 {
-                title = "\(interval)s"  // 0.5s 而不是 500ms
-            } else if interval == 1.0 {
-                title = "1s"
-            } else {
-                title = "\(Int(interval))s"
-            }
-            
-            let item = NSMenuItem(
-                title: title,
-                action: #selector(monitoringIntervalSelected(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.representedObject = interval
-            item.state = (currentMonitoringInterval == interval) ? .on : .off
-            intervalSubmenu.addItem(item)
+            let title = interval < 1.0 ? "\(interval)s" : "\(Int(interval))s"
+            let menuItem = NSMenuItem(title: title, action: #selector(monitoringIntervalSelected(_:)), keyEquivalent: "")
+            menuItem.target = self
+            menuItem.representedObject = interval
+            menuItem.state = (currentMonitoringInterval == interval) ? .on : .off
+            submenu.addItem(menuItem)
         }
-        
-        intervalItem.submenu = intervalSubmenu
-        return intervalItem
+        item.submenu = submenu
+        return item
     }
-    
-    /// 创建服务选择菜单
+
     private func createServiceCategoryMenu(for category: ServiceCategory) -> NSMenuItem {
-        let categoryItem = NSMenuItem(title: category.displayName, action: nil, keyEquivalent: "")
-        let categorySubmenu = NSMenu()
-        
-        // 为该类别添加服务
-        let endpoints = ServiceManager.shared.getEndpoints(for: category)
-        for endpoint in endpoints {
-            let item = NSMenuItem(
-                title: endpoint.name,
-                action: #selector(serviceSelected(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.representedObject = endpoint
-            item.state = (endpoint.name == currentEndpoint?.name) ? .on : .off
-            categorySubmenu.addItem(item)
+        let item = NSMenuItem(title: category.displayName, action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        for endpoint in ServiceManager.shared.getEndpoints(for: category) {
+            let menuItem = NSMenuItem(title: endpoint.name, action: #selector(serviceSelected(_:)), keyEquivalent: "")
+            menuItem.target = self
+            menuItem.representedObject = endpoint
+            menuItem.state = (endpoint.name == currentEndpoint?.name) ? .on : .off
+            submenu.addItem(menuItem)
         }
-        
-        categoryItem.submenu = categorySubmenu
-        return categoryItem
+        item.submenu = submenu
+        return item
     }
-    
-    /// 创建 About 菜单
+
     private func createAboutMenu() -> NSMenuItem {
-        let aboutItem = NSMenuItem(title: "About", action: nil, keyEquivalent: "")
-        let aboutSubmenu = NSMenu()
-        
-        // 版本信息
-        let versionItem = NSMenuItem(
-            title: "Version: \(AppConstants.Version.current)",
-            action: nil,
-            keyEquivalent: ""
-        )
+        let item = NSMenuItem(title: "About", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+
+        let versionItem = NSMenuItem(title: "Version: \(AppConstants.Version.current)", action: nil, keyEquivalent: "")
         versionItem.isEnabled = false
-        aboutSubmenu.addItem(versionItem)
-        
-        // 构建信息
-        let buildItem = NSMenuItem(
-            title: "Build: \(AppConstants.Version.build)",
-            action: nil,
-            keyEquivalent: ""
-        )
+        submenu.addItem(versionItem)
+
+        let buildItem = NSMenuItem(title: "Build: \(AppConstants.Version.build)", action: nil, keyEquivalent: "")
         buildItem.isEnabled = false
-        aboutSubmenu.addItem(buildItem)
-        
-        // 分隔线
-        aboutSubmenu.addItem(NSMenuItem.separator())
-        
-        // 版权信息
-        let copyrightItem = NSMenuItem(
-            title: "© 2025 iMoni App",
-            action: nil,
-            keyEquivalent: ""
-        )
+        submenu.addItem(buildItem)
+
+        submenu.addItem(NSMenuItem.separator())
+
+        let copyrightItem = NSMenuItem(title: "© 2025 iMoni App", action: nil, keyEquivalent: "")
         copyrightItem.isEnabled = false
-        aboutSubmenu.addItem(copyrightItem)
-        
-        aboutItem.submenu = aboutSubmenu
-        return aboutItem
+        submenu.addItem(copyrightItem)
+
+        item.submenu = submenu
+        return item
     }
-    
-    /// 创建退出菜单
+
     private func createQuitMenu() -> NSMenuItem {
-        let quitItem = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
-        quitItem.target = self
-        return quitItem
+        let item = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
+        item.target = self
+        return item
     }
-    
-    // MARK: - 菜单事件处理
-    
+
     @objc private func displayModeSelected(_ sender: NSMenuItem) {
         guard let modeString = sender.representedObject as? String,
               let mode = DisplayMode(rawValue: modeString) else { return }
         currentDisplayMode = mode
     }
-    
+
     @objc private func monitoringIntervalSelected(_ sender: NSMenuItem) {
         guard let interval = sender.representedObject as? TimeInterval else { return }
         currentMonitoringInterval = interval
     }
-    
+
     @objc private func serviceSelected(_ sender: NSMenuItem) {
         guard let endpoint = sender.representedObject as? ServiceEndpoint else { return }
-        
-        // 选择服务时自动切换到Service显示模式
         if currentDisplayMode != .serviceLatency {
             currentDisplayMode = .serviceLatency
         }
-        
         switchToEndpoint(endpoint)
     }
-    
+
     @objc private func quitApp() {
         NSApplication.shared.terminate(nil)
     }
-    
-    // MARK: - 设置管理
-    
-    /// 从用户偏好读取当前模式和服务
+
     private func loadSettings() {
-        // 加载显示模式
         currentDisplayMode = ConfigurationManager.shared.getDisplayMode()
-
-        // 加载监控间隔
         currentMonitoringInterval = ConfigurationManager.shared.getMonitoringInterval()
-
-        // 加载上次选择的服务
         if let savedServiceName = ConfigurationManager.shared.getLastSelectedService() {
             if let savedEndpoint = ServiceManager.shared.endpoints.first(where: { $0.name == savedServiceName }) {
                 currentEndpoint = savedEndpoint
             }
         }
     }
-    
-    /// 将当前模式和服务写入 ConfigurationManager
+
     private func saveSettings() {
         ConfigurationManager.shared.setDisplayMode(currentDisplayMode)
         ConfigurationManager.shared.setMonitoringInterval(currentMonitoringInterval)
-
         if let endpoint = currentEndpoint {
             ConfigurationManager.shared.setLastSelectedService(endpoint.name)
         }
     }
-    
-    // MARK: - 服务管理
-    
-    /// 切换服务端点并立即开始延迟监控
+
     private func switchToEndpoint(_ endpoint: ServiceEndpoint) {
         currentEndpoint = endpoint
         latencyMonitor.startMonitoring(endpoint)
         updateCombinedDisplay()
-        saveSettings()  // 保存服务选择
+        saveSettings()
     }
-    
-    // MARK: - 显示更新
-    
-    /// 汇总当前需要显示的文本并更新到状态栏
+
     private func updateCombinedDisplay() {
         let displayText = createDisplayText()
-
         Utilities.safeMainQueueCallback { [weak self] in
             guard let self = self else { return }
-
             if let button = self.statusBarItem?.button {
-                button.title = displayText
+                let color: NSColor = self.connectionStatus == .connected ? .labelColor : .systemRed
+                let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
+                button.attributedTitle = NSAttributedString(string: displayText, attributes: attrs)
                 button.toolTip = self.createTooltip()
             }
         }
     }
 
-    /// 创建显示文本（纯文字，不使用图片）
     private func createDisplayText() -> String {
         switch currentDisplayMode {
         case .serviceLatency:
@@ -400,76 +267,56 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
                 return "\(serviceName): \(AppConstants.defaultValue)"
             }
             return "\(serviceName): \(Utilities.formatLatency(rawLatency))"
-
         case .networkSpeed:
             return "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)"
         }
     }
-    
-    /// 创建工具提示
+
     private func createTooltip() -> String {
         var tooltip = "iMoni - Network Monitor\n"
-        
         switch currentDisplayMode {
         case .serviceLatency:
             if let endpoint = currentEndpoint {
-                tooltip += "Service: \(endpoint.name)\n"
-                tooltip += "Host: \(endpoint.host):\(endpoint.port)\n"
+                tooltip += "Service: \(endpoint.name)\nHost: \(endpoint.host):\(endpoint.port)\n"
                 tooltip += "Latency: \(Utilities.formatLatency(rawLatency))\n"
             } else {
                 tooltip += "No service selected\n"
             }
         case .networkSpeed:
-            tooltip += "Download Speed: \(currentDownloadSpeed)\n"
-            tooltip += "Upload Speed: \(currentUploadSpeed)\n"
+            tooltip += "Download Speed: \(currentDownloadSpeed)\nUpload Speed: \(currentUploadSpeed)\n"
         }
-        
         tooltip += "Update Rate: \(Utilities.formatInterval(currentMonitoringInterval))\n"
-        
-        if connectionStatus == .disconnected {
-            tooltip += "Status: Disconnected"
-        } else {
-            tooltip += "Status: Connected"
-        }
-        
+        tooltip += connectionStatus == .disconnected ? "Status: Disconnected" : "Status: Connected"
         return tooltip
     }
-    
+
     // MARK: - MonitorLatencyDelegate
-    
-    /// 延迟更新回调（毫秒，0 位小数）
+
     func monitor(_ monitor: MonitorLatency, didUpdateLatency latency: TimeInterval, for endpoint: ServiceEndpoint) {
         rawLatency = latency
         connectionStatus = .connected
-        isHealthy = true
         updateCombinedDisplay()
     }
-    
+
     func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint) {
         rawLatency = 0.0
         connectionStatus = status
-        isHealthy = false
-        
         updateCombinedDisplay()
     }
-    
+
     // MARK: - MonitorNetworkDelegate
-    
-    /// 上/下行网速更新（单位 MB/s，3 位小数）
+
     func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double, uploadSpeed: Double) {
         currentDownloadSpeed = Utilities.formatSpeed(downloadSpeed)
         currentUploadSpeed = Utilities.formatSpeed(uploadSpeed)
         connectionStatus = .connected
-        isHealthy = true
         updateCombinedDisplay()
     }
-    
+
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
         currentDownloadSpeed = AppConstants.defaultValue
         currentUploadSpeed = AppConstants.defaultValue
         connectionStatus = status
-        isHealthy = false
-        
         updateCombinedDisplay()
     }
 }

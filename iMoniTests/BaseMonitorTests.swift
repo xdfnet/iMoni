@@ -1,14 +1,6 @@
-//
-//  BaseMonitorTests.swift
-//  iMoniTests
-//
-//  测试基础监控类
-//
-
 import XCTest
 @testable import iMoni
 
-// 可测试的 BaseMonitor 子类
 final class TestableMonitor: BaseMonitor {
     var performMonitoringCallCount = 0
     var cleanupResourcesCallCount = 0
@@ -23,7 +15,6 @@ final class TestableMonitor: BaseMonitor {
 }
 
 final class BaseMonitorTests: XCTestCase {
-
     var monitor: TestableMonitor!
 
     override func setUp() {
@@ -36,14 +27,10 @@ final class BaseMonitorTests: XCTestCase {
         super.tearDown()
     }
 
-    // MARK: - 初始化测试
-
     func testInit_setsInitialState() {
         XCTAssertFalse(monitor.isMonitoring)
         XCTAssertEqual(monitor.monitoringInterval, 1.0)
     }
-
-    // MARK: - 监控启停测试
 
     func testStartMonitoring_setsIsMonitoringTrue() {
         monitor.startMonitoring()
@@ -56,28 +43,20 @@ final class BaseMonitorTests: XCTestCase {
         XCTAssertFalse(monitor.isMonitoring)
     }
 
-    // MARK: - 双重启停测试
-
     func testDoubleStart_hasNoEffect() {
         monitor.startMonitoring()
-        let firstStartState = monitor.isMonitoring
-
+        let firstState = monitor.isMonitoring
         monitor.startMonitoring()
-        XCTAssertTrue(monitor.isMonitoring)
-        XCTAssertEqual(monitor.isMonitoring, firstStartState)
+        XCTAssertEqual(monitor.isMonitoring, firstState)
     }
 
     func testDoubleStop_hasNoEffect() {
         monitor.startMonitoring()
         monitor.stopMonitoring()
-        let firstStopState = monitor.isMonitoring
-
+        let firstState = monitor.isMonitoring
         monitor.stopMonitoring()
-        XCTAssertFalse(monitor.isMonitoring)
-        XCTAssertEqual(monitor.isMonitoring, firstStopState)
+        XCTAssertEqual(monitor.isMonitoring, firstState)
     }
-
-    // MARK: - 清理测试
 
     func testCleanup_resetsState() {
         monitor.startMonitoring()
@@ -93,20 +72,14 @@ final class BaseMonitorTests: XCTestCase {
     }
 
     func testDeinit_cleansUpResources() {
-        var localMonitor: TestableMonitor? = TestableMonitor(queueLabel: "com.imoni.test.deinit", interval: 1.0)
-        localMonitor?.startMonitoring()
-        localMonitor = nil
-        // 如果没有崩溃，说明清理正常
+        var m: TestableMonitor? = TestableMonitor(queueLabel: "com.imoni.test.deinit", interval: 1.0)
+        m?.startMonitoring()
+        m = nil
     }
 
-    // MARK: - 监控间隔测试
-
     func testUpdateInterval_clampsToValidRange() {
-        // 测试小于最小值
         monitor.updateInterval(0.01)
         XCTAssertEqual(monitor.monitoringInterval, MonitorConstants.minInterval)
-
-        // 测试大于最大值
         monitor.updateInterval(100.0)
         XCTAssertEqual(monitor.monitoringInterval, MonitorConstants.maxInterval)
     }
@@ -118,14 +91,10 @@ final class BaseMonitorTests: XCTestCase {
 
     func testUpdateInterval_doesNotRestartTimerWhenInactive() {
         monitor.startMonitoring()
-        let countBeforeUpdate = monitor.performMonitoringCallCount
+        let countBefore = monitor.performMonitoringCallCount
         monitor.stopMonitoring()
-
-        // 更新间隔时监控已停止
         monitor.updateInterval(0.5)
-
-        // 短暂等待
         Thread.sleep(forTimeInterval: 0.3)
-        XCTAssertEqual(monitor.performMonitoringCallCount, countBeforeUpdate)
+        XCTAssertEqual(monitor.performMonitoringCallCount, countBefore)
     }
 }
