@@ -55,7 +55,7 @@ class MenuBarController: NSObject {
     private var networkMonitor: MonitorNetwork?
     
     // 状态管理
-    private var currentDisplayMode: DisplayMode = .service
+    private var currentDisplayMode: DisplayMode = .serviceLatency
     private var currentService: ServiceEndpoint?
     private var currentRate: MonitorRate = .oneSecond
 }
@@ -68,8 +68,9 @@ class MenuBarController: NSObject {
 init()
 
 // 显示模式管理
-func switchToServiceMode()
+func switchToServiceLatencyMode()
 func switchToNetworkMode()
+func switchToCombinedMode()
 
 // 监控管理
 func startLatencyMonitoring(for endpoint: ServiceEndpoint)
@@ -161,7 +162,7 @@ class MonitorLatency: BaseMonitor {
     
     // 连接管理
     private var connection: NWConnection?
-    private var connectionTimeout: TimeInterval = 0.5
+    private var connectionTimeout: TimeInterval = 1.5
 }
 ```
 
@@ -404,8 +405,9 @@ enum MonitorRate: TimeInterval, CaseIterable {
 
 ```swift
 enum DisplayMode: String, CaseIterable {
-    case service = "service"
-    case network = "network"
+    case serviceLatency = "Service"
+    case networkSpeed = "Network"
+    case combined = "Combined"
     
     var displayName: String
 }
@@ -441,7 +443,7 @@ struct MonitorConstants {
     static let defaultTimeout: TimeInterval = 3.0
     static let maxRetryCount = 3
     static let retryDelay: TimeInterval = 1.0
-    static let connectionTimeout: TimeInterval = 0.5
+    static let connectionTimeout: TimeInterval = 1.5
 }
 ```
 
@@ -645,7 +647,7 @@ iMoni 使用 `UserDefaults` 存储用户配置，所有配置键都以 `com.imon
 
 **配置项：**
 
-- `displayMode`：显示模式（service/network）
+- `displayMode`：显示模式（Service/Network/Combined）
 - `monitorRate`：监控频率（0.5/1.0/2.0/5.0 秒）
 - `selectedService`：选中的服务端点
 - `notificationsEnabled`：通知开关
@@ -657,7 +659,7 @@ iMoni 使用 `UserDefaults` 存储用户配置，所有配置键都以 `com.imon
 let displayMode = ConfigurationManager.shared.displayMode
 
 // 写入配置
-ConfigurationManager.shared.displayMode = .network
+ConfigurationManager.shared.displayMode = .networkSpeed
 
 // 重置配置
 ConfigurationManager.shared.resetToDefaults()
@@ -675,7 +677,7 @@ let success = ConfigurationManager.shared.importConfiguration(configData)
 
 ```swift
 // 连接超时时间
-let connectionTimeout: TimeInterval = 0.5
+let connectionTimeout: TimeInterval = 1.5
 
 // 监控间隔
 let monitorInterval: TimeInterval = 1.0

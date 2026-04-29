@@ -4,6 +4,18 @@ import SwiftUI
 enum DisplayMode: String, CaseIterable {
     case serviceLatency = "Service"
     case networkSpeed = "Network"
+    case combined = "Combined"
+
+    var displayName: String {
+        switch self {
+        case .serviceLatency:
+            return "TCP Latency"
+        case .networkSpeed:
+            return "Network"
+        case .combined:
+            return "Combined"
+        }
+    }
 }
 
 class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate {
@@ -16,10 +28,17 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private var rawLatency: TimeInterval = 0.0
     private var currentDownloadSpeed: String = AppConstants.defaultValue
     private var currentUploadSpeed: String = AppConstants.defaultValue
-    private var connectionStatus: ConnectionStatus = .disconnected
+    private var serviceConnectionStatus: ConnectionStatus = .disconnected
+    private var networkConnectionStatus: ConnectionStatus = .disconnected
+
+    private var recentDownloadSpeeds: [Double] = []
+    private var recentUploadSpeeds: [Double] = []
+    private let speedSmoothingSampleCount = 3
+    private var isApplyingSavedSettings = false
 
     private var currentDisplayMode: DisplayMode = .serviceLatency {
         didSet {
+            guard !isApplyingSavedSettings else { return }
             saveSettings()
             updateCombinedDisplay()
             updateMonitoringState()
@@ -28,6 +47,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     private var currentMonitoringInterval: TimeInterval = MonitorConstants.defaultUserInterval {
         didSet {
+            guard !isApplyingSavedSettings else { return }
+            resetNetworkSpeedHistory()
             saveSettings()
             updateMonitoringState()
         }
@@ -78,29 +99,51 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     private func setupDefaultMonitoring() {
-        if currentDisplayMode == .serviceLatency {
-            if let endpoint = currentEndpoint {
+        switch currentDisplayMode {
+        case .serviceLatency:
+            if let endpoint = ensureCurrentEndpoint() {
                 switchToEndpoint(endpoint)
-            } else if let claudeEndpoint = ServiceManager.shared.endpoints.first(where: { $0.name == "Claude" }) {
-                currentEndpoint = claudeEndpoint
-                switchToEndpoint(claudeEndpoint)
-            } else if let firstEndpoint = ServiceManager.shared.endpoints.first {
-                currentEndpoint = firstEndpoint
-                switchToEndpoint(firstEndpoint)
             }
-        } else {
+        case .networkSpeed:
+            networkMonitor.startMonitoring(interval: currentMonitoringInterval)
+        case .combined:
+            if let endpoint = ensureCurrentEndpoint() {
+                switchToEndpoint(endpoint)
+            }
             networkMonitor.startMonitoring(interval: currentMonitoringInterval)
         }
     }
 
+    private func ensureCurrentEndpoint() -> ServiceEndpoint? {
+        if let endpoint = currentEndpoint {
+            return endpoint
+        }
+        if let claudeEndpoint = ServiceManager.shared.endpoints.first(where: { $0.name == "Claude" }) {
+            currentEndpoint = claudeEndpoint
+            return claudeEndpoint
+        }
+        if let firstEndpoint = ServiceManager.shared.endpoints.first {
+            currentEndpoint = firstEndpoint
+            return firstEndpoint
+        }
+        return nil
+    }
+
     private func updateMonitoringState() {
-        if currentDisplayMode == .serviceLatency {
-            if let endpoint = currentEndpoint {
+        switch currentDisplayMode {
+        case .serviceLatency:
+            if let endpoint = ensureCurrentEndpoint() {
                 latencyMonitor.startMonitoring(endpoint)
             }
             networkMonitor.stopMonitoring()
-        } else {
+            resetNetworkSpeedHistory()
+        case .networkSpeed:
             latencyMonitor.stopMonitoring()
+            networkMonitor.startMonitoring(interval: currentMonitoringInterval)
+        case .combined:
+            if let endpoint = ensureCurrentEndpoint() {
+                latencyMonitor.startMonitoring(endpoint)
+            }
             networkMonitor.startMonitoring(interval: currentMonitoringInterval)
         }
     }
@@ -131,7 +174,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         let item = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
         let submenu = NSMenu()
         for mode in DisplayMode.allCases {
-            let menuItem = NSMenuItem(title: mode.rawValue, action: #selector(displayModeSelected(_:)), keyEquivalent: "")
+            let menuItem = NSMenuItem(title: mode.displayName, action: #selector(displayModeSelected(_:)), keyEquivalent: "")
             menuItem.target = self
             menuItem.representedObject = mode.rawValue
             menuItem.state = (currentDisplayMode == mode) ? .on : .off
@@ -211,8 +254,10 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     @objc private func serviceSelected(_ sender: NSMenuItem) {
         guard let endpoint = sender.representedObject as? ServiceEndpoint else { return }
-        if currentDisplayMode != .serviceLatency {
-            currentDisplayMode = .serviceLatency
+        if currentDisplayMode == .networkSpeed {
+            currentEndpoint = endpoint
+            currentDisplayMode = .combined
+            return
         }
         switchToEndpoint(endpoint)
     }
@@ -222,6 +267,9 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     private func loadSettings() {
+        isApplyingSavedSettings = true
+        defer { isApplyingSavedSettings = false }
+
         currentDisplayMode = ConfigurationManager.shared.getDisplayMode()
         currentMonitoringInterval = ConfigurationManager.shared.getMonitoringInterval()
         if let savedServiceName = ConfigurationManager.shared.getLastSelectedService() {
@@ -251,72 +299,149 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         Utilities.safeMainQueueCallback { [weak self] in
             guard let self = self else { return }
             if let button = self.statusBarItem?.button {
-                let color: NSColor = self.connectionStatus == .connected ? .labelColor : .systemRed
-                let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
+                let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: self.statusColor()]
                 button.attributedTitle = NSAttributedString(string: displayText, attributes: attrs)
                 button.toolTip = self.createTooltip()
             }
         }
     }
 
+    private func statusColor() -> NSColor {
+        switch currentDisplayMode {
+        case .serviceLatency, .combined:
+            return serviceConnectionStatus == .connected ? .labelColor : .systemRed
+        case .networkSpeed:
+            return networkConnectionStatus == .connected ? .labelColor : .systemRed
+        }
+    }
+
     private func createDisplayText() -> String {
         switch currentDisplayMode {
         case .serviceLatency:
-            let serviceName = currentEndpoint?.name ?? AppConstants.defaultValue
-            if connectionStatus != .connected {
-                return "\(serviceName): \(AppConstants.defaultValue)"
-            }
-            return "\(serviceName): \(Utilities.formatLatency(rawLatency))"
+            return latencyDisplayText()
         case .networkSpeed:
-            return "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)"
+            return networkDisplayText()
+        case .combined:
+            return "\(latencyDisplayText()) \(networkDisplayText())"
         }
+    }
+
+    private func latencyDisplayText() -> String {
+        let serviceName = currentEndpoint?.name ?? AppConstants.defaultValue
+        return "\(serviceName): \(latencyValueText())"
+    }
+
+    private func latencyValueText() -> String {
+        guard serviceConnectionStatus == .connected else {
+            return AppConstants.defaultValue
+        }
+        return Utilities.formatLatency(rawLatency)
+    }
+
+    private func networkDisplayText() -> String {
+        "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)"
     }
 
     private func createTooltip() -> String {
         var tooltip = "iMoni - Network Monitor\n"
         switch currentDisplayMode {
         case .serviceLatency:
-            if let endpoint = currentEndpoint {
-                tooltip += "Service: \(endpoint.name)\nHost: \(endpoint.host):\(endpoint.port)\n"
-                tooltip += "Latency: \(Utilities.formatLatency(rawLatency))\n"
-            } else {
-                tooltip += "No service selected\n"
-            }
+            appendLatencyTooltip(to: &tooltip)
         case .networkSpeed:
-            tooltip += "Download Speed: \(currentDownloadSpeed)\nUpload Speed: \(currentUploadSpeed)\n"
+            appendNetworkTooltip(to: &tooltip)
+        case .combined:
+            appendLatencyTooltip(to: &tooltip)
+            appendNetworkTooltip(to: &tooltip)
         }
         tooltip += "Update Rate: \(Utilities.formatInterval(currentMonitoringInterval))\n"
-        tooltip += connectionStatus == .disconnected ? "Status: Disconnected" : "Status: Connected"
+        switch currentDisplayMode {
+        case .serviceLatency:
+            tooltip += "Status: \(statusText(serviceConnectionStatus))"
+        case .networkSpeed:
+            tooltip += "Status: \(statusText(networkConnectionStatus))"
+        case .combined:
+            tooltip += "TCP Status: \(statusText(serviceConnectionStatus))\n"
+            tooltip += "Network Status: \(statusText(networkConnectionStatus))"
+        }
         return tooltip
+    }
+
+    private func appendLatencyTooltip(to tooltip: inout String) {
+        if let endpoint = currentEndpoint {
+            tooltip += "Service: \(endpoint.name)\nHost: \(endpoint.host):\(endpoint.port)\n"
+            tooltip += "TCP Latency: \(latencyValueText())\n"
+        } else {
+            tooltip += "No service selected\n"
+        }
+    }
+
+    private func appendNetworkTooltip(to tooltip: inout String) {
+        tooltip += "Download Speed: \(currentDownloadSpeed)\nUpload Speed: \(currentUploadSpeed)\n"
+    }
+
+    private func statusText(_ status: ConnectionStatus) -> String {
+        switch status {
+        case .connected:
+            return "Connected"
+        case .disconnected:
+            return "Disconnected"
+        }
+    }
+
+    private static func smoothedSpeed(_ speed: Double, samples: inout [Double], sampleCount: Int) -> Double {
+        samples.append(speed)
+        if samples.count > sampleCount {
+            samples.removeFirst(samples.count - sampleCount)
+        }
+        return samples.reduce(0.0, +) / Double(samples.count)
+    }
+
+    private func resetNetworkSpeedHistory() {
+        recentDownloadSpeeds.removeAll()
+        recentUploadSpeeds.removeAll()
+        currentDownloadSpeed = AppConstants.defaultValue
+        currentUploadSpeed = AppConstants.defaultValue
+        networkConnectionStatus = .disconnected
     }
 
     // MARK: - MonitorLatencyDelegate
 
     func monitor(_ monitor: MonitorLatency, didUpdateLatency latency: TimeInterval, for endpoint: ServiceEndpoint) {
         rawLatency = latency
-        connectionStatus = .connected
+        serviceConnectionStatus = .connected
         updateCombinedDisplay()
     }
 
     func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint) {
         rawLatency = 0.0
-        connectionStatus = status
+        serviceConnectionStatus = status
         updateCombinedDisplay()
     }
 
     // MARK: - MonitorNetworkDelegate
 
     func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double, uploadSpeed: Double) {
-        currentDownloadSpeed = Utilities.formatSpeed(downloadSpeed)
-        currentUploadSpeed = Utilities.formatSpeed(uploadSpeed)
-        connectionStatus = .connected
+        let sampleCount = speedSmoothingSampleCount
+        let smoothedDownloadSpeed = Self.smoothedSpeed(
+            downloadSpeed,
+            samples: &recentDownloadSpeeds,
+            sampleCount: sampleCount
+        )
+        let smoothedUploadSpeed = Self.smoothedSpeed(
+            uploadSpeed,
+            samples: &recentUploadSpeeds,
+            sampleCount: sampleCount
+        )
+
+        currentDownloadSpeed = Utilities.formatSpeed(smoothedDownloadSpeed)
+        currentUploadSpeed = Utilities.formatSpeed(smoothedUploadSpeed)
+        networkConnectionStatus = .connected
         updateCombinedDisplay()
     }
 
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
-        currentDownloadSpeed = AppConstants.defaultValue
-        currentUploadSpeed = AppConstants.defaultValue
-        connectionStatus = status
+        resetNetworkSpeedHistory()
+        networkConnectionStatus = status
         updateCombinedDisplay()
     }
 }

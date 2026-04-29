@@ -85,7 +85,7 @@ struct iMoniApp: App {
 - 实时状态更新和显示
 
 #### 关键功能
-- 显示模式切换（Service/Network）
+- 显示模式切换（TCP Latency/Network/Combined）
 - 监控间隔配置
 - 服务选择菜单
 - 状态指示器

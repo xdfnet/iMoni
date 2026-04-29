@@ -1,7 +1,7 @@
 # iMoni Makefile
 # 用于构建 macOS 应用程序
 
-.PHONY: help debug install push package _update_version _require_msg
+.PHONY: help build build-fixed clean test quality-check debug install push package _update_version _require_msg
 
 # =============================================================================
 # 项目配置
@@ -14,6 +14,7 @@ BUILD_DIR = build
 DERIVED_DATA_DIR = ~/Library/Developer/Xcode/DerivedData
 INSTALL_DIR = /Applications
 PACKAGE_DIR = build/packages
+RELEASE_BUILD_PRODUCTS_DIR = $(CURDIR)/$(BUILD_DIR)/Build/Products/Release
 
 # 颜色定义
 RED = \033[0;31m
@@ -38,16 +39,58 @@ help:
 	@echo "$(CYAN)=================$(NC)"
 	@echo ""
 	@echo "$(GREEN)核心命令:$(NC)"
+	@echo "  $(YELLOW)build$(NC)       - 递增版本号并构建 Release 版本"
+	@echo "  $(YELLOW)build-fixed$(NC) - 构建 Release 版本 (不递增版本)"
+	@echo "  $(YELLOW)clean$(NC)       - 清理构建文件"
+	@echo "  $(YELLOW)test$(NC)        - 运行测试"
+	@echo "  $(YELLOW)quality-check$(NC) - 运行代码质量检查"
 	@echo "  $(YELLOW)debug$(NC)       - 构建并运行 Debug 版本"
 	@echo "  $(YELLOW)install$(NC)      - 构建并安装 Release 版本 (不提交)"
 	@echo "  $(YELLOW)package$(NC)      - 打包 Release 为 zip (依赖 install)"
 	@echo "  $(YELLOW)push$(NC)        - 构建、安装、打包、更新版本并推送 (需要 MSG=\"提交信息\")"
 	@echo ""
 	@echo "$(GREEN)使用示例:$(NC)"
+	@echo "  $(CYAN)make build$(NC)                    - 递增版本并构建"
+	@echo "  $(CYAN)make build-fixed$(NC)              - 固定版本构建"
+	@echo "  $(CYAN)make test$(NC)                     - 运行测试"
 	@echo "  $(CYAN)make debug$(NC)                    - 开发调试"
 	@echo "  $(CYAN)make install$(NC)                  - Release 构建并安装"
 	@echo "  $(CYAN)make package$(NC)                  - 打包 zip"
 	@echo "  $(CYAN)make push MSG=\"修复bug\"$(NC)       - 完整发布流程"
+
+build: _update_version build-fixed
+
+build-fixed:
+	@echo "$(BLUE)开始 Release 构建...$(NC)"
+	@rm -rf $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)
+	@BUILD_NUMBER=$$(date +%Y%m%d%H%M%S); \
+	xcodebuild \
+		-project $(XCODEPROJ) \
+		-target $(SCHEME_NAME) \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		CURRENT_PROJECT_VERSION=$$BUILD_NUMBER \
+		CONFIGURATION_BUILD_DIR=$(RELEASE_BUILD_PRODUCTS_DIR) \
+		build
+	@echo "$(GREEN)Release 构建完成$(NC)"
+
+clean:
+	@echo "$(BLUE)清理构建文件...$(NC)"
+	@rm -rf $(BUILD_DIR)
+	@rm -rf $(DERIVED_DATA_DIR)/$(PROJECT_NAME)-*
+	@echo "$(GREEN)清理完成$(NC)"
+
+test:
+	@echo "$(BLUE)运行测试...$(NC)"
+	@xcodebuild \
+		-project $(XCODEPROJ) \
+		-scheme $(SCHEME_NAME) \
+		-destination 'platform=macOS' \
+		test
+
+quality-check:
+	@bash Scripts/code_quality_check.sh
 
 debug:
 	@echo "$(BLUE)开始 Debug 构建和运行...$(NC)"
@@ -98,6 +141,7 @@ install:
 		-configuration Release \
 		-destination 'platform=macOS' \
 		CURRENT_PROJECT_VERSION=$$BUILD_NUMBER \
+		CONFIGURATION_BUILD_DIR=$(RELEASE_BUILD_PRODUCTS_DIR) \
 		build
 	@echo "$(GREEN)Release 构建完成$(NC)"
 

@@ -4,15 +4,29 @@ import XCTest
 final class ConfigurationManagerTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        ConfigurationManager.shared.resetToDefaults()
+        let config = ConfigurationManager.shared
+        config.onConfigurationChanged = nil
+        config.resetToDefaults()
+    }
+
+    override func tearDown() {
+        ConfigurationManager.shared.onConfigurationChanged = nil
+        super.tearDown()
     }
 
     func testSetDisplayMode_triggersChangeNotification() {
         let config = ConfigurationManager.shared
         let expectation = self.expectation(description: "configuration changed")
+        expectation.assertForOverFulfill = true
         config.onConfigurationChanged = { expectation.fulfill() }
         config.setDisplayMode(.networkSpeed)
         waitForExpectations(timeout: 2.0)
+    }
+
+    func testSetDisplayMode_acceptsCombinedMode() {
+        let config = ConfigurationManager.shared
+        config.setDisplayMode(.combined)
+        XCTAssertEqual(config.getDisplayMode(), .combined)
     }
 
     func testSetMonitoringInterval_clampsToMin() {
@@ -35,6 +49,7 @@ final class ConfigurationManagerTests: XCTestCase {
     func testSetEnableNotifications_triggersChangeNotification() {
         let config = ConfigurationManager.shared
         let expectation = self.expectation(description: "configuration changed")
+        expectation.assertForOverFulfill = true
         config.onConfigurationChanged = { expectation.fulfill() }
         config.setEnableNotifications(false)
         waitForExpectations(timeout: 2.0)
@@ -52,6 +67,7 @@ final class ConfigurationManagerTests: XCTestCase {
     func testResetToDefaults_triggersChangeNotification() {
         let config = ConfigurationManager.shared
         let expectation = self.expectation(description: "configuration changed")
+        expectation.assertForOverFulfill = true
         config.onConfigurationChanged = { expectation.fulfill() }
         config.resetToDefaults()
         waitForExpectations(timeout: 2.0)

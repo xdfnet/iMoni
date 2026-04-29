@@ -46,7 +46,7 @@ enum ConnectionStatus {
 }
 
 struct MonitorConstants {
-    static let connectionTimeout: TimeInterval = 0.5
+    static let connectionTimeout: TimeInterval = 1.5
 
     static let defaultLatencyInterval: TimeInterval = 1.0
     static let defaultNetworkInterval: TimeInterval = 1.0

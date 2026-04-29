@@ -30,7 +30,7 @@ final class SharedTypesTests: XCTestCase {
 
     // MARK: - MonitorConstants
     func testMonitorConstants_connectionTimeout() {
-        XCTAssertEqual(MonitorConstants.connectionTimeout, 0.5)
+        XCTAssertEqual(MonitorConstants.connectionTimeout, 1.5)
     }
 
     func testMonitorConstants_defaultIntervals() {
@@ -59,19 +59,28 @@ final class SharedTypesTests: XCTestCase {
     // MARK: - DisplayMode
     func testDisplayMode_allCases() {
         let cases = DisplayMode.allCases
-        XCTAssertEqual(cases.count, 2)
+        XCTAssertEqual(cases.count, 3)
         XCTAssertTrue(cases.contains(.serviceLatency))
         XCTAssertTrue(cases.contains(.networkSpeed))
+        XCTAssertTrue(cases.contains(.combined))
     }
 
     func testDisplayMode_rawValues() {
         XCTAssertEqual(DisplayMode.serviceLatency.rawValue, "Service")
         XCTAssertEqual(DisplayMode.networkSpeed.rawValue, "Network")
+        XCTAssertEqual(DisplayMode.combined.rawValue, "Combined")
+    }
+
+    func testDisplayMode_displayNames() {
+        XCTAssertEqual(DisplayMode.serviceLatency.displayName, "TCP Latency")
+        XCTAssertEqual(DisplayMode.networkSpeed.displayName, "Network")
+        XCTAssertEqual(DisplayMode.combined.displayName, "Combined")
     }
 
     func testDisplayMode_fromRawValue() {
         XCTAssertEqual(DisplayMode(rawValue: "Service"), .serviceLatency)
         XCTAssertEqual(DisplayMode(rawValue: "Network"), .networkSpeed)
+        XCTAssertEqual(DisplayMode(rawValue: "Combined"), .combined)
     }
 
     func testDisplayMode_unknownRawValue() {

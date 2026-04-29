@@ -8,7 +8,22 @@ struct Utilities {
     }
 
     static func formatSpeed(_ speed: Double) -> String {
-        String(format: "%.2fMB/s", speed)
+        let bytesPerSecond = max(0, speed) * 1000.0 * 1000.0
+
+        if bytesPerSecond < 1000.0 {
+            return String(format: "%.0fB/s", bytesPerSecond)
+        }
+
+        let kilobytesPerSecond = bytesPerSecond / 1000.0
+        if kilobytesPerSecond < 1000.0 {
+            return String(format: "%.1fKB/s", kilobytesPerSecond)
+        }
+
+        if speed < 1000.0 {
+            return String(format: "%.2fMB/s", speed)
+        }
+
+        return String(format: "%.2fGB/s", speed / 1000.0)
     }
 
     static func formatInterval(_ interval: TimeInterval) -> String {

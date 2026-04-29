@@ -140,8 +140,9 @@ class ConfigurationManager {
     }
 
     private func notifyConfigurationChanged() {
+        let callback = onConfigurationChanged
         Utilities.safeMainQueueCallback {
-            self.onConfigurationChanged?()
+            callback?()
         }
     }
 }

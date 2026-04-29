@@ -126,7 +126,7 @@ class MonitorNetwork: BaseMonitor {
         var totalSentBytes: UInt64 = 0
 
         let mib: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
-        let ifmSize = MemoryLayout<if_msghdr>.size
+        let routeMessagePrefixSize = MemoryLayout<UInt16>.size + MemoryLayout<UInt8>.size * 2
         let if2mSize = MemoryLayout<if_msghdr2>.size
         let maxMessageSize = 65536
 
@@ -147,13 +147,17 @@ class MonitorNetwork: BaseMonitor {
         buffer.withUnsafeBytes { (rawPtr: UnsafeRawBufferPointer) in
             var offset = 0
             while offset < len {
-                guard offset + ifmSize <= len else { break }
-                let baseAddr = rawPtr.baseAddress!.advanced(by: offset)
-                let ifm = baseAddr.load(as: if_msghdr.self)
-                let msgLen = Int(ifm.ifm_msglen)
-                guard msgLen >= ifmSize, msgLen <= maxMessageSize, offset + msgLen <= len else { break }
+                guard offset + routeMessagePrefixSize <= len else { break }
 
-                if ifm.ifm_type == RTM_IFINFO2 {
+                let baseAddr = rawPtr.baseAddress!.advanced(by: offset)
+                let msgLen = Int(baseAddr.load(as: UInt16.self))
+                let msgType = baseAddr.load(fromByteOffset: 3, as: UInt8.self)
+
+                guard msgLen >= routeMessagePrefixSize, msgLen <= maxMessageSize, offset + msgLen <= len else {
+                    break
+                }
+
+                if msgType == UInt8(RTM_IFINFO2) {
                     guard offset + if2mSize <= len else { break }
                     let if2m = baseAddr.load(as: if_msghdr2.self)
                     let upFlag = Int32(IFF_UP)

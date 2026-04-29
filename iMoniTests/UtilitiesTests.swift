@@ -15,16 +15,28 @@ final class UtilitiesTests: XCTestCase {
         XCTAssertEqual(Utilities.formatLatency(10.0), "10000ms")
     }
 
-    func testFormatSpeed_formatsWithTwoDecimalPlaces() {
+    func testFormatSpeed_formatsMegabytesWithTwoDecimalPlaces() {
         XCTAssertEqual(Utilities.formatSpeed(12.345), "12.35MB/s")
     }
 
     func testFormatSpeed_zeroSpeed() {
-        XCTAssertEqual(Utilities.formatSpeed(0.0), "0.00MB/s")
+        XCTAssertEqual(Utilities.formatSpeed(0.0), "0B/s")
     }
 
-    func testFormatSpeed_wholeNumber() {
-        XCTAssertEqual(Utilities.formatSpeed(100.0), "100.00MB/s")
+    func testFormatSpeed_formatsBytes() {
+        XCTAssertEqual(Utilities.formatSpeed(0.000512), "512B/s")
+    }
+
+    func testFormatSpeed_formatsKilobytes() {
+        XCTAssertEqual(Utilities.formatSpeed(0.012345), "12.3KB/s")
+    }
+
+    func testFormatSpeed_formatsGigabytes() {
+        XCTAssertEqual(Utilities.formatSpeed(1234.0), "1.23GB/s")
+    }
+
+    func testFormatSpeed_clampsNegativeSpeedToZero() {
+        XCTAssertEqual(Utilities.formatSpeed(-1.0), "0B/s")
     }
 
     // MARK: - Numeric

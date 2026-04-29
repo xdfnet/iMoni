@@ -90,8 +90,9 @@ iMoni 是一个功能完整的 macOS 菜单栏网络监控应用，提供 AI 服
 ### 3. 配置菜单
 
 #### 显示模式
-- **Service**：AI 服务延迟监控模式
+- **TCP Latency**：AI 服务 TCP 连接延迟监控模式
 - **Network**：系统网络流量监控模式
+- **Combined**：同时显示服务 TCP 延迟与系统网络速度
 
 #### 监控频率
 - 0.5 秒：高频监控，适合调试
@@ -144,7 +145,7 @@ iMoni 是一个功能完整的 macOS 菜单栏网络监控应用，提供 AI 服
 
 #### 格式化工具
 - **`formatLatency`**：延迟时间格式化（毫秒）
-- **`formatSpeed`**：网络速度格式化（MB/s，三位小数）
+- **`formatSpeed`**：网络速度格式化（B/s、KB/s、MB/s、GB/s 自动切换）
 - **`formatInterval`**：时间间隔格式化
 
 #### 时间工具
