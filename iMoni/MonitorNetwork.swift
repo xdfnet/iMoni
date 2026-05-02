@@ -1,175 +1,120 @@
 import Foundation
-import Darwin
 
 protocol MonitorNetworkDelegate: AnyObject {
-    func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double, uploadSpeed: Double)
+    func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double)
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus)
 }
 
-class MonitorNetwork: BaseMonitor {
+class MonitorNetwork {
     weak var delegate: MonitorNetworkDelegate?
 
+    private var timer: Timer?
+    private var isRunning = false
+    private let queue = DispatchQueue(label: MonitorConstants.networkQueueLabel, qos: .utility)
+    private var interval: TimeInterval
     private var lastBytesReceived: UInt64 = 0
-    private var lastBytesSent: UInt64 = 0
     private var lastUpdateTime: CFAbsoluteTime = 0
-    private let statsLock = NSLock()
 
-    override init(queueLabel: String, interval: TimeInterval) {
-        super.init(queueLabel: queueLabel, interval: interval)
+    init(interval: TimeInterval = MonitorConstants.defaultInterval) {
+        self.interval = interval
     }
 
-    func startMonitoring(interval: TimeInterval = MonitorConstants.defaultNetworkInterval) {
-        do {
-            let (totalReceived, totalSent) = try getTotalNetworkBytes()
-            statsLock.lock()
-            lastBytesReceived = totalReceived
-            lastBytesSent = totalSent
-            lastUpdateTime = Utilities.currentTimestamp()
-            statsLock.unlock()
-        } catch {
-            delegate?.networkStats(self, didFailWithError: ConnectionStatus.disconnected)
+    func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
+        guard let initial = totalRxBytes() else {
+            delegate?.networkStats(self, didFailWithError: .disconnected)
             return
         }
-        updateInterval(interval)
-        super.startMonitoring()
+        lastBytesReceived = initial
+        lastUpdateTime = CFAbsoluteTimeGetCurrent()
+        self.interval = interval
+        isRunning = true
+        startTimer()
     }
 
-    override func stopMonitoring() {
-        super.stopMonitoring()
-        statsLock.lock()
+    func stopMonitoring() {
+        isRunning = false
+        stopTimer()
         lastBytesReceived = 0
-        lastBytesSent = 0
         lastUpdateTime = 0
-        statsLock.unlock()
     }
 
-    override func performMonitoring() {
-        updateNetworkSpeeds()
+    func cleanup() {
+        stopMonitoring()
     }
 
-    override func cleanupResources() {}
+    func updateInterval(_ newInterval: TimeInterval) {
+        interval = newInterval
+        if timer != nil { startTimer() }
+    }
 
-    private func updateNetworkSpeeds() {
-        let currentTime = Utilities.currentTimestamp()
+    private func startTimer() {
+        stopTimer()
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            self?.queue.async { self?.update() }
+        }
+        timer?.tolerance = min(interval * 0.1, 0.1)
+    }
 
-        statsLock.lock()
-        let lastTime = lastUpdateTime
-        let lastReceived = lastBytesReceived
-        let lastSent = lastBytesSent
-        statsLock.unlock()
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
 
-        let timeElapsed = currentTime - lastTime
-        guard timeElapsed > 0 else { return }
+    private func update() {
+        guard isRunning else { return }
+        let now = CFAbsoluteTimeGetCurrent()
+        let elapsed = now - lastUpdateTime
+        guard elapsed > 0.01 else { return }
 
-        do {
-            let (currentReceived, currentSent) = try getTotalNetworkBytes()
-
-            guard currentReceived >= lastReceived, currentSent >= lastSent else {
-                #if DEBUG
-                Utilities.debugPrint("Network interface reset detected, reinitializing stats")
-                #endif
-                resetNetworkStats()
-                return
+        guard let currentBytes = totalRxBytes() else {
+            mainQueue { [weak self] in
+                self?.delegate?.networkStats(self!, didFailWithError: .disconnected)
             }
+            return
+        }
 
-            let receivedDiff = currentReceived - lastReceived
-            let sentDiff = currentSent - lastSent
+        guard currentBytes >= lastBytesReceived else {
+            lastBytesReceived = currentBytes
+            lastUpdateTime = now
+            return
+        }
 
-            let bytesPerMB: Double = 1000.0 * 1000.0
-            let downloadSpeedMBps = Double(receivedDiff) / timeElapsed / bytesPerMB
-            let uploadSpeedMBps = Double(sentDiff) / timeElapsed / bytesPerMB
+        let diff = currentBytes - lastBytesReceived
+        let speed = Double(diff) / elapsed / (1000.0 * 1000.0)
 
-            guard downloadSpeedMBps >= 0 && downloadSpeedMBps <= MonitorConstants.maxReasonableSpeed,
-                  uploadSpeedMBps >= 0 && uploadSpeedMBps <= MonitorConstants.maxReasonableSpeed else {
-                #if DEBUG
-                Utilities.debugPrint("Unreasonable speed detected: \(Utilities.formatSpeed(downloadSpeedMBps))")
-                #endif
-                resetNetworkStats()
-                return
-            }
+        guard speed <= MonitorConstants.maxReasonableSpeed else {
+            lastBytesReceived = currentBytes
+            lastUpdateTime = now
+            return
+        }
 
-            statsLock.lock()
-            lastBytesReceived = currentReceived
-            lastBytesSent = currentSent
-            lastUpdateTime = currentTime
-            statsLock.unlock()
+        lastBytesReceived = currentBytes
+        lastUpdateTime = now
 
-            Utilities.safeMainQueueCallback { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.networkStats(self, didUpdateDownloadSpeed: downloadSpeedMBps, uploadSpeed: uploadSpeedMBps)
-            }
-        } catch {
-            Utilities.safeMainQueueCallback { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.networkStats(self, didFailWithError: ConnectionStatus.disconnected)
-            }
+        mainQueue { [weak self] in
+            self?.delegate?.networkStats(self!, didUpdateDownloadSpeed: speed)
         }
     }
 
-    private func resetNetworkStats() {
-        do {
-            let (totalReceived, totalSent) = try getTotalNetworkBytes()
-            statsLock.lock()
-            lastBytesReceived = totalReceived
-            lastBytesSent = totalSent
-            lastUpdateTime = Utilities.currentTimestamp()
-            statsLock.unlock()
-        } catch {
-            #if DEBUG
-            Utilities.debugPrint("Network error during reset: \(error.localizedDescription)")
-            #endif
-        }
-    }
+    /// Total bytes received across all non-loopback interfaces via getifaddrs + AF_LINK.
+    private func totalRxBytes() -> UInt64? {
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0, let start = ifaddr else { return nil }
+        defer { freeifaddrs(ifaddr) }
 
-    private func getTotalNetworkBytes() throws -> (received: UInt64, sent: UInt64) {
-        var totalReceivedBytes: UInt64 = 0
-        var totalSentBytes: UInt64 = 0
-
-        let mib: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
-        let ifmSize = MemoryLayout<if_msghdr>.size
-        let if2mSize = MemoryLayout<if_msghdr2>.size
-        let maxMessageSize = 65536
-
-        var len: size_t = 0
-        let sysctlResult = mib.withUnsafeBufferPointer { mibBuffer in
-            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress),
-                   UInt32(mib.count), nil, &len, nil, 0)
-        }
-        guard sysctlResult >= 0, len > 0 else { throw NetworkError.sysctlFailed }
-
-        var buffer = [CChar](repeating: 0, count: len)
-        let sysctlResult2 = mib.withUnsafeBufferPointer { mibBuffer in
-            sysctl(UnsafeMutablePointer<Int32>(mutating: mibBuffer.baseAddress),
-                   UInt32(mib.count), &buffer, &len, nil, 0)
-        }
-        guard sysctlResult2 >= 0 else { throw NetworkError.sysctlFailed }
-
-        buffer.withUnsafeBytes { (rawPtr: UnsafeRawBufferPointer) in
-            var offset = 0
-            while offset < len {
-                guard offset + ifmSize <= len else { break }
-                let baseAddr = rawPtr.baseAddress!.advanced(by: offset)
-                let ifm = baseAddr.load(as: if_msghdr.self)
-                let msgLen = Int(ifm.ifm_msglen)
-                guard msgLen >= ifmSize, msgLen <= maxMessageSize, offset + msgLen <= len else { break }
-
-                if ifm.ifm_type == RTM_IFINFO2 {
-                    guard offset + if2mSize <= len else { break }
-                    let if2m = baseAddr.load(as: if_msghdr2.self)
-                    let upFlag = Int32(IFF_UP)
-                    let loopbackFlag = Int32(IFF_LOOPBACK)
-                    if (if2m.ifm_flags & upFlag) != 0 && (if2m.ifm_flags & loopbackFlag) == 0 {
-                        totalReceivedBytes += if2m.ifm_data.ifi_ibytes
-                        totalSentBytes += if2m.ifm_data.ifi_obytes
-                    }
-                }
-                offset += msgLen
+        var total: UInt64 = 0
+        var cursor: UnsafeMutablePointer<ifaddrs>? = start
+        while let cur = cursor {
+            let flags = Int32(cur.pointee.ifa_flags)
+            if (flags & IFF_LOOPBACK) == 0,
+               let addr = cur.pointee.ifa_addr?.pointee,
+               addr.sa_family == AF_LINK,
+               let data = cur.pointee.ifa_data {
+                let stats = data.assumingMemoryBound(to: if_data.self).pointee
+                total += UInt64(stats.ifi_ibytes)
             }
+            cursor = cur.pointee.ifa_next
         }
-        return (totalReceivedBytes, totalSentBytes)
-    }
-
-    private enum NetworkError: Error {
-        case sysctlFailed
+        return total
     }
 }

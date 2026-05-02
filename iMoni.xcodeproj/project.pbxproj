@@ -7,24 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1B2C3D4E5F67890ABCDEF01 /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDCBA0987654321ABCDEF01 /* Core.swift */; };
 		0FB493F4396FB820BE4B3EE3 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB36529EA52167AA649BA1FD /* App.swift */; };
-		2AFA76CEA8B88FA8B63C503C /* MenuBarControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E1426A1D1C1CD5C5C1C7A52 /* MenuBarControllerTests.swift */; };
-		36B1CAD2D54E2D56E5350FCE /* ServiceManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A282E8FBF03CF50CF718BEAE /* ServiceManagerTests.swift */; };
 		3A0180D06BD98C1132C2AE52 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D82B52906E1EC1492A1678 /* MenuBarController.swift */; };
 		4258CDBA413D9809CB58E9F5 /* MonitorLatency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9666341B4C81F06B8D679B49 /* MonitorLatency.swift */; };
-		507A41E1529E606BD55B5ED5 /* ServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4173261B498D31A6A89A1C05 /* ServiceManager.swift */; };
-		7588E4F37664E8FBA0A5ECD7 /* UtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314347587FE76779E7CF405B /* UtilitiesTests.swift */; };
-		77249A8B39D73416CC6F4F91 /* BaseMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52635B9C309832FE981EDC33 /* BaseMonitor.swift */; };
-		77E91E6FDC97815D00D8CE99 /* MonitorLatencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F95902D18DF13690BA542 /* MonitorLatencyTests.swift */; };
-		87898F9085D5E28D12637947 /* ConfigurationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B4B22766985B1198B32678 /* ConfigurationManagerTests.swift */; };
 		9308B38EA8F051F3DBBA601C /* MonitorNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */; };
-		9DA57691F3F1990CC66856AD /* MonitorNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 391D3659A31B90DCC1E9F998 /* MonitorNetworkTests.swift */; };
-		CC05014EF90785FD83BF9B9B /* BaseMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD497169ACE3A3A9DF756A7B /* BaseMonitorTests.swift */; };
 		DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3CC934CE62FFFAF200C3C135 /* Assets.xcassets */; };
-		DE93EBDC2C797F9295004E9A /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B01602DB999EE5607C1D1B /* Utilities.swift */; };
-		DEC02A02BE6497090B4426A2 /* SharedTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06510C3E6CAB82AD0DF38245 /* SharedTypes.swift */; };
-		E7CD3D7036737093036438AD /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4E0DE03F0F730F671C390 /* ConfigurationManager.swift */; };
-		F92BE149A4DB7DD50BFB7F99 /* SharedTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9609652947387A5B69A856F6 /* SharedTypesTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,25 +26,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		06510C3E6CAB82AD0DF38245 /* SharedTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypes.swift; sourceTree = "<group>"; };
-		314347587FE76779E7CF405B /* UtilitiesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesTests.swift; sourceTree = "<group>"; };
-		391D3659A31B90DCC1E9F998 /* MonitorNetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetworkTests.swift; sourceTree = "<group>"; };
 		3CC934CE62FFFAF200C3C135 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		3E1426A1D1C1CD5C5C1C7A52 /* MenuBarControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarControllerTests.swift; sourceTree = "<group>"; };
 		3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetwork.swift; sourceTree = "<group>"; };
-		4173261B498D31A6A89A1C05 /* ServiceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceManager.swift; sourceTree = "<group>"; };
-		52635B9C309832FE981EDC33 /* BaseMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMonitor.swift; sourceTree = "<group>"; };
-		61B4B22766985B1198B32678 /* ConfigurationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManagerTests.swift; sourceTree = "<group>"; };
-		80B01602DB999EE5607C1D1B /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
-		9609652947387A5B69A856F6 /* SharedTypesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedTypesTests.swift; sourceTree = "<group>"; };
 		9666341B4C81F06B8D679B49 /* MonitorLatency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorLatency.swift; sourceTree = "<group>"; };
-		A282E8FBF03CF50CF718BEAE /* ServiceManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceManagerTests.swift; sourceTree = "<group>"; };
 		B3344CEBEDD33EE2813412B9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		BD497169ACE3A3A9DF756A7B /* BaseMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseMonitorTests.swift; sourceTree = "<group>"; };
-		C9F4E0DE03F0F730F671C390 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
-		D05F95902D18DF13690BA542 /* MonitorLatencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorLatencyTests.swift; sourceTree = "<group>"; };
-		D88B44FD5D12C8BC99811C72 /* iMoniTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iMoniTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E78182CF4D2FECF5C253EF7A /* iMoni.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iMoni.entitlements; sourceTree = "<group>"; };
+		FEDCBA0987654321ABCDEF01 /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
 		EB36529EA52167AA649BA1FD /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		F5D82B52906E1EC1492A1678 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		F60B6ABB8D8F37687EBA30B8 /* iMoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iMoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,42 +41,22 @@
 		66E219AD86D9A9C61254346A /* iMoni */ = {
 			isa = PBXGroup;
 			children = (
+				FEDCBA0987654321ABCDEF01 /* Core.swift */,
 				EB36529EA52167AA649BA1FD /* App.swift */,
 				3CC934CE62FFFAF200C3C135 /* Assets.xcassets */,
-				52635B9C309832FE981EDC33 /* BaseMonitor.swift */,
-				C9F4E0DE03F0F730F671C390 /* ConfigurationManager.swift */,
 				E78182CF4D2FECF5C253EF7A /* iMoni.entitlements */,
 				B3344CEBEDD33EE2813412B9 /* Info.plist */,
 				F5D82B52906E1EC1492A1678 /* MenuBarController.swift */,
 				9666341B4C81F06B8D679B49 /* MonitorLatency.swift */,
 				3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */,
-				4173261B498D31A6A89A1C05 /* ServiceManager.swift */,
-				06510C3E6CAB82AD0DF38245 /* SharedTypes.swift */,
-				80B01602DB999EE5607C1D1B /* Utilities.swift */,
 			);
 			path = iMoni;
-			sourceTree = "<group>";
-		};
-		8984344F56A2FD9F7157745B /* iMoniTests */ = {
-			isa = PBXGroup;
-			children = (
-				BD497169ACE3A3A9DF756A7B /* BaseMonitorTests.swift */,
-				61B4B22766985B1198B32678 /* ConfigurationManagerTests.swift */,
-				3E1426A1D1C1CD5C5C1C7A52 /* MenuBarControllerTests.swift */,
-				D05F95902D18DF13690BA542 /* MonitorLatencyTests.swift */,
-				391D3659A31B90DCC1E9F998 /* MonitorNetworkTests.swift */,
-				A282E8FBF03CF50CF718BEAE /* ServiceManagerTests.swift */,
-				9609652947387A5B69A856F6 /* SharedTypesTests.swift */,
-				314347587FE76779E7CF405B /* UtilitiesTests.swift */,
-			);
-			path = iMoniTests;
 			sourceTree = "<group>";
 		};
 		CD658B2D197E3608290E4E81 = {
 			isa = PBXGroup;
 			children = (
 				66E219AD86D9A9C61254346A /* iMoni */,
-				8984344F56A2FD9F7157745B /* iMoniTests */,
 				CF5E553B24D580C04130A69B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -110,7 +65,6 @@
 			isa = PBXGroup;
 			children = (
 				F60B6ABB8D8F37687EBA30B8 /* iMoni.app */,
-				D88B44FD5D12C8BC99811C72 /* iMoniTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,24 +72,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3B665CEE8A88E2596FF4A217 /* iMoniTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 778608105BD8820366D95895 /* Build configuration list for PBXNativeTarget "iMoniTests" */;
-			buildPhases = (
-				3718393A0CAAE2AD80F61428 /* Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				CCD0E4AD79AC4A966D8B0C85 /* PBXTargetDependency */,
-			);
-			name = iMoniTests;
-			packageProductDependencies = (
-			);
-			productName = iMoniTests;
-			productReference = D88B44FD5D12C8BC99811C72 /* iMoniTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		587493FE4D66955FDA9BF5CD /* iMoni */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4ECC780003DB1187E25773F9 /* Build configuration list for PBXNativeTarget "iMoni" */;
@@ -163,10 +99,6 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
-					3B665CEE8A88E2596FF4A217 = {
-						DevelopmentTeam = K9UF7A2D7Y;
-						ProvisioningStyle = Automatic;
-					};
 					587493FE4D66955FDA9BF5CD = {
 						DevelopmentTeam = K9UF7A2D7Y;
 						ProvisioningStyle = Automatic;
@@ -188,7 +120,6 @@
 			projectRoot = "";
 			targets = (
 				587493FE4D66955FDA9BF5CD /* iMoni */,
-				3B665CEE8A88E2596FF4A217 /* iMoniTests */,
 			);
 		};
 /* End PBXProject section */
@@ -209,30 +140,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1B2C3D4E5F67890ABCDEF01 /* Core.swift in Sources */,
 				0FB493F4396FB820BE4B3EE3 /* App.swift in Sources */,
-				77249A8B39D73416CC6F4F91 /* BaseMonitor.swift in Sources */,
-				E7CD3D7036737093036438AD /* ConfigurationManager.swift in Sources */,
 				3A0180D06BD98C1132C2AE52 /* MenuBarController.swift in Sources */,
 				4258CDBA413D9809CB58E9F5 /* MonitorLatency.swift in Sources */,
 				9308B38EA8F051F3DBBA601C /* MonitorNetwork.swift in Sources */,
-				507A41E1529E606BD55B5ED5 /* ServiceManager.swift in Sources */,
-				DEC02A02BE6497090B4426A2 /* SharedTypes.swift in Sources */,
-				DE93EBDC2C797F9295004E9A /* Utilities.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3718393A0CAAE2AD80F61428 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				CC05014EF90785FD83BF9B9B /* BaseMonitorTests.swift in Sources */,
-				87898F9085D5E28D12637947 /* ConfigurationManagerTests.swift in Sources */,
-				2AFA76CEA8B88FA8B63C503C /* MenuBarControllerTests.swift in Sources */,
-				77E91E6FDC97815D00D8CE99 /* MonitorLatencyTests.swift in Sources */,
-				9DA57691F3F1990CC66856AD /* MonitorNetworkTests.swift in Sources */,
-				36B1CAD2D54E2D56E5350FCE /* ServiceManagerTests.swift in Sources */,
-				F92BE149A4DB7DD50BFB7F99 /* SharedTypesTests.swift in Sources */,
-				7588E4F37664E8FBA0A5ECD7 /* UtilitiesTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,52 +159,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		45D2921C584AC50C379BFA7A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = K9UF7A2D7Y;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = David.iMoniTests;
-				PRODUCT_NAME = iMoniTests;
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iMoni.app/Contents/MacOS/iMoni";
-			};
-			name = Release;
-		};
-		5804B66870D23D9E758273A5 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = K9UF7A2D7Y;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = David.iMoniTests;
-				PRODUCT_NAME = iMoniTests;
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iMoni.app/Contents/MacOS/iMoni";
-			};
-			name = Debug;
-		};
 		A0D433B651E6A16C4980A086 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -309,7 +175,7 @@
 					"@executable_path/../Frameworks",
 				);
 
-				MARKETING_VERSION = 1.28.13;
+				MARKETING_VERSION = 1.28.14;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -462,7 +328,7 @@
 					"@executable_path/../Frameworks",
 				);
 
-				MARKETING_VERSION = 1.28.13;
+				MARKETING_VERSION = 1.28.14;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -478,15 +344,6 @@
 			buildConfigurations = (
 				C4090F380C4BACE22BC131DE /* Debug */,
 				A0D433B651E6A16C4980A086 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		778608105BD8820366D95895 /* Build configuration list for PBXNativeTarget "iMoniTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				5804B66870D23D9E758273A5 /* Debug */,
-				45D2921C584AC50C379BFA7A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

@@ -1,45 +1,23 @@
 import Cocoa
-import SwiftUI
-
-enum DisplayMode: String, CaseIterable {
-    case serviceLatency = "Service"
-    case networkSpeed = "Network"
-}
 
 class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate {
     private var statusBarItem: NSStatusItem?
-
-    private let latencyMonitor = MonitorLatency(queueLabel: MonitorConstants.latencyQueueLabel, interval: MonitorConstants.defaultLatencyInterval)
-    private let networkMonitor = MonitorNetwork(queueLabel: MonitorConstants.networkQueueLabel, interval: MonitorConstants.defaultNetworkInterval)
-
+    private let latencyMonitor = MonitorLatency()
+    private let networkMonitor = MonitorNetwork()
     private var currentEndpoint: ServiceEndpoint?
-    private var rawLatency: TimeInterval = 0.0
-    private var currentDownloadSpeed: String = AppConstants.defaultValue
-    private var currentUploadSpeed: String = AppConstants.defaultValue
+    private var rawLatency: TimeInterval = 0
+    private var currentDownloadSpeed = "--"
     private var connectionStatus: ConnectionStatus = .disconnected
-
-    private var currentDisplayMode: DisplayMode = .serviceLatency {
-        didSet {
-            saveSettings()
-            updateCombinedDisplay()
-            updateMonitoringState()
-        }
-    }
-
-    private var currentMonitoringInterval: TimeInterval = MonitorConstants.defaultUserInterval {
-        didSet {
-            saveSettings()
-            updateMonitoringState()
-        }
-    }
+    private var currentDisplayMode: DisplayMode = .serviceLatency
+    private var currentInterval: TimeInterval = MonitorConstants.defaultInterval
 
     override init() {
         super.init()
         loadSettings()
         setupStatusBar()
-        setupMonitor()
-        setupDefaultMonitoring()
-        updateCombinedDisplay()
+        setupMonitors()
+        applySettings()
+        updateDisplay()
     }
 
     func cleanup() {
@@ -55,12 +33,12 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     func resumeAfterWake() {
-        if statusBarItem == nil {
-            setupStatusBar()
-        }
-        updateMonitoringState()
-        updateCombinedDisplay()
+        if statusBarItem == nil { setupStatusBar() }
+        applySettings()
+        updateDisplay()
     }
+
+    // MARK: - Setup
 
     private func setupStatusBar() {
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -71,223 +49,179 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         }
     }
 
-    private func setupMonitor() {
+    private func setupMonitors() {
         latencyMonitor.delegate = self
-        latencyMonitor.updateInterval(currentMonitoringInterval)
         networkMonitor.delegate = self
     }
 
-    private func setupDefaultMonitoring() {
-        if currentDisplayMode == .serviceLatency {
-            if let endpoint = currentEndpoint {
-                switchToEndpoint(endpoint)
-            } else if let claudeEndpoint = ServiceManager.shared.endpoints.first(where: { $0.name == "Claude" }) {
-                currentEndpoint = claudeEndpoint
-                switchToEndpoint(claudeEndpoint)
-            } else if let firstEndpoint = ServiceManager.shared.endpoints.first {
-                currentEndpoint = firstEndpoint
-                switchToEndpoint(firstEndpoint)
-            }
-        } else {
-            networkMonitor.startMonitoring(interval: currentMonitoringInterval)
-        }
-    }
-
-    private func updateMonitoringState() {
+    private func applySettings() {
         if currentDisplayMode == .serviceLatency {
             if let endpoint = currentEndpoint {
                 latencyMonitor.startMonitoring(endpoint)
+            } else {
+                currentEndpoint = services.first
+                if let endpoint = currentEndpoint { latencyMonitor.startMonitoring(endpoint) }
             }
             networkMonitor.stopMonitoring()
         } else {
             latencyMonitor.stopMonitoring()
-            networkMonitor.startMonitoring(interval: currentMonitoringInterval)
+            networkMonitor.startMonitoring(interval: currentInterval)
         }
     }
 
+    private func switchTo(_ endpoint: ServiceEndpoint) {
+        currentEndpoint = endpoint
+        latencyMonitor.startMonitoring(endpoint)
+        saveSettings()
+        updateDisplay()
+    }
+
+    // MARK: - Menu
+
     @objc private func statusBarButtonClicked() {
-        statusBarItem?.menu = createMenu()
+        statusBarItem?.menu = buildMenu()
         statusBarItem?.button?.performClick(nil)
         statusBarItem?.menu = nil
     }
 
-    private func createMenu() -> NSMenu {
+    private func buildMenu() -> NSMenu {
         let menu = NSMenu()
-        menu.addItem(createDisplayModeMenu())
-        menu.addItem(NSMenuItem.separator())
-        for category in ServiceManager.shared.categories {
-            menu.addItem(createServiceCategoryMenu(for: category))
+
+        let viewItem = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
+        let viewSub = NSMenu()
+        for mode in DisplayMode.allCases {
+            let item = NSMenuItem(title: mode.rawValue, action: #selector(selectMode(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = mode.rawValue
+            item.state = mode == currentDisplayMode ? .on : .off
+            viewSub.addItem(item)
         }
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(createMonitoringIntervalMenu())
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(createAboutMenu())
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(createQuitMenu())
+        viewItem.submenu = viewSub
+        menu.addItem(viewItem)
+        menu.addItem(.separator())
+
+        let serviceItem = NSMenuItem(title: "Services", action: nil, keyEquivalent: "")
+        let serviceSub = NSMenu()
+        for svc in services {
+            let item = NSMenuItem(title: svc.name, action: #selector(selectService(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = svc
+            item.state = svc.name == currentEndpoint?.name ? .on : .off
+            serviceSub.addItem(item)
+        }
+        serviceItem.submenu = serviceSub
+        menu.addItem(serviceItem)
+        menu.addItem(.separator())
+
+        let rateItem = NSMenuItem(title: "Rate", action: nil, keyEquivalent: "")
+        let rateSub = NSMenu()
+        for interval in MonitorConstants.availableIntervals {
+            let title = interval < 1 ? "\(interval)s" : "\(Int(interval))s"
+            let item = NSMenuItem(title: title, action: #selector(selectInterval(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = interval
+            item.state = interval == currentInterval ? .on : .off
+            rateSub.addItem(item)
+        }
+        rateItem.submenu = rateSub
+        menu.addItem(rateItem)
+        menu.addItem(.separator())
+
+        let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        let about = NSMenuItem(title: "iMoni v\(ver)", action: nil, keyEquivalent: "")
+        about.isEnabled = false
+        menu.addItem(about)
+        menu.addItem(.separator())
+
+        let quit = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
+        quit.target = self
+        menu.addItem(quit)
+
         return menu
     }
 
-    private func createDisplayModeMenu() -> NSMenuItem {
-        let item = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
-        let submenu = NSMenu()
-        for mode in DisplayMode.allCases {
-            let menuItem = NSMenuItem(title: mode.rawValue, action: #selector(displayModeSelected(_:)), keyEquivalent: "")
-            menuItem.target = self
-            menuItem.representedObject = mode.rawValue
-            menuItem.state = (currentDisplayMode == mode) ? .on : .off
-            submenu.addItem(menuItem)
-        }
-        item.submenu = submenu
-        return item
-    }
-
-    private func createMonitoringIntervalMenu() -> NSMenuItem {
-        let item = NSMenuItem(title: "Rate", action: nil, keyEquivalent: "")
-        let submenu = NSMenu()
-        for interval in MonitorConstants.availableIntervals {
-            let title = interval < 1.0 ? "\(interval)s" : "\(Int(interval))s"
-            let menuItem = NSMenuItem(title: title, action: #selector(monitoringIntervalSelected(_:)), keyEquivalent: "")
-            menuItem.target = self
-            menuItem.representedObject = interval
-            menuItem.state = (currentMonitoringInterval == interval) ? .on : .off
-            submenu.addItem(menuItem)
-        }
-        item.submenu = submenu
-        return item
-    }
-
-    private func createServiceCategoryMenu(for category: ServiceCategory) -> NSMenuItem {
-        let item = NSMenuItem(title: category.displayName, action: nil, keyEquivalent: "")
-        let submenu = NSMenu()
-        for endpoint in ServiceManager.shared.getEndpoints(for: category) {
-            let menuItem = NSMenuItem(title: endpoint.name, action: #selector(serviceSelected(_:)), keyEquivalent: "")
-            menuItem.target = self
-            menuItem.representedObject = endpoint
-            menuItem.state = (endpoint.name == currentEndpoint?.name) ? .on : .off
-            submenu.addItem(menuItem)
-        }
-        item.submenu = submenu
-        return item
-    }
-
-    private func createAboutMenu() -> NSMenuItem {
-        let item = NSMenuItem(title: "About", action: nil, keyEquivalent: "")
-        let submenu = NSMenu()
-
-        let versionItem = NSMenuItem(title: "Version: \(AppConstants.Version.current)", action: nil, keyEquivalent: "")
-        versionItem.isEnabled = false
-        submenu.addItem(versionItem)
-
-        let buildItem = NSMenuItem(title: "Build: \(AppConstants.Version.build)", action: nil, keyEquivalent: "")
-        buildItem.isEnabled = false
-        submenu.addItem(buildItem)
-
-        submenu.addItem(NSMenuItem.separator())
-
-        let copyrightItem = NSMenuItem(title: "© 2025 iMoni App", action: nil, keyEquivalent: "")
-        copyrightItem.isEnabled = false
-        submenu.addItem(copyrightItem)
-
-        item.submenu = submenu
-        return item
-    }
-
-    private func createQuitMenu() -> NSMenuItem {
-        let item = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
-        item.target = self
-        return item
-    }
-
-    @objc private func displayModeSelected(_ sender: NSMenuItem) {
-        guard let modeString = sender.representedObject as? String,
-              let mode = DisplayMode(rawValue: modeString) else { return }
+    @objc private func selectMode(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let mode = DisplayMode(rawValue: raw) else { return }
         currentDisplayMode = mode
+        saveSettings()
+        applySettings()
+        updateDisplay()
     }
 
-    @objc private func monitoringIntervalSelected(_ sender: NSMenuItem) {
-        guard let interval = sender.representedObject as? TimeInterval else { return }
-        currentMonitoringInterval = interval
-    }
-
-    @objc private func serviceSelected(_ sender: NSMenuItem) {
+    @objc private func selectService(_ sender: NSMenuItem) {
         guard let endpoint = sender.representedObject as? ServiceEndpoint else { return }
         if currentDisplayMode != .serviceLatency {
             currentDisplayMode = .serviceLatency
         }
-        switchToEndpoint(endpoint)
+        switchTo(endpoint)
+    }
+
+    @objc private func selectInterval(_ sender: NSMenuItem) {
+        guard let interval = sender.representedObject as? TimeInterval else { return }
+        currentInterval = interval
+        saveSettings()
+        latencyMonitor.updateInterval(interval)
+        networkMonitor.updateInterval(interval)
     }
 
     @objc private func quitApp() {
         NSApplication.shared.terminate(nil)
     }
 
+    // MARK: - Settings
+
     private func loadSettings() {
-        currentDisplayMode = ConfigurationManager.shared.getDisplayMode()
-        currentMonitoringInterval = ConfigurationManager.shared.getMonitoringInterval()
-        if let savedServiceName = ConfigurationManager.shared.getLastSelectedService() {
-            if let savedEndpoint = ServiceManager.shared.endpoints.first(where: { $0.name == savedServiceName }) {
-                currentEndpoint = savedEndpoint
-            }
+        let ud = UserDefaults.standard
+        currentDisplayMode = ud.displayMode
+        currentInterval = ud.monitoringInterval
+        if let name = ud.lastServiceName {
+            currentEndpoint = services.first { $0.name == name }
         }
     }
 
     private func saveSettings() {
-        ConfigurationManager.shared.setDisplayMode(currentDisplayMode)
-        ConfigurationManager.shared.setMonitoringInterval(currentMonitoringInterval)
-        if let endpoint = currentEndpoint {
-            ConfigurationManager.shared.setLastSelectedService(endpoint.name)
+        let ud = UserDefaults.standard
+        ud.displayMode = currentDisplayMode
+        ud.monitoringInterval = currentInterval
+        ud.lastServiceName = currentEndpoint?.name
+    }
+
+    // MARK: - Display
+
+    private func updateDisplay() {
+        let text: String
+        switch currentDisplayMode {
+        case .serviceLatency:
+            let name = currentEndpoint?.name ?? "--"
+            if connectionStatus != .connected { text = "\(name): --" }
+            else { text = "\(name): \(formatLatency(rawLatency))" }
+        case .networkSpeed:
+            text = "↓\(currentDownloadSpeed)"
         }
-    }
-
-    private func switchToEndpoint(_ endpoint: ServiceEndpoint) {
-        currentEndpoint = endpoint
-        latencyMonitor.startMonitoring(endpoint)
-        updateCombinedDisplay()
-        saveSettings()
-    }
-
-    private func updateCombinedDisplay() {
-        let displayText = createDisplayText()
-        Utilities.safeMainQueueCallback { [weak self] in
+        mainQueue { [weak self] in
             guard let self = self else { return }
             if let button = self.statusBarItem?.button {
                 let color: NSColor = self.connectionStatus == .connected ? .labelColor : .systemRed
                 let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
-                button.attributedTitle = NSAttributedString(string: displayText, attributes: attrs)
-                button.toolTip = self.createTooltip()
+                button.attributedTitle = NSAttributedString(string: text, attributes: attrs)
+                button.toolTip = self.tooltipText
             }
         }
     }
 
-    private func createDisplayText() -> String {
+    private var tooltipText: String {
+        var tip = "iMoni\n"
         switch currentDisplayMode {
         case .serviceLatency:
-            let serviceName = currentEndpoint?.name ?? AppConstants.defaultValue
-            if connectionStatus != .connected {
-                return "\(serviceName): \(AppConstants.defaultValue)"
-            }
-            return "\(serviceName): \(Utilities.formatLatency(rawLatency))"
-        case .networkSpeed:
-            return "↓\(currentDownloadSpeed) ↑\(currentUploadSpeed)"
-        }
-    }
-
-    private func createTooltip() -> String {
-        var tooltip = "iMoni - Network Monitor\n"
-        switch currentDisplayMode {
-        case .serviceLatency:
-            if let endpoint = currentEndpoint {
-                tooltip += "Service: \(endpoint.name)\nHost: \(endpoint.host):\(endpoint.port)\n"
-                tooltip += "Latency: \(Utilities.formatLatency(rawLatency))\n"
-            } else {
-                tooltip += "No service selected\n"
+            if let ep = currentEndpoint {
+                tip += "\(ep.name) (\(ep.host):\(ep.port))\nLatency: \(formatLatency(rawLatency))\n"
             }
         case .networkSpeed:
-            tooltip += "Download Speed: \(currentDownloadSpeed)\nUpload Speed: \(currentUploadSpeed)\n"
+            tip += "↓ \(currentDownloadSpeed)\n"
         }
-        tooltip += "Update Rate: \(Utilities.formatInterval(currentMonitoringInterval))\n"
-        tooltip += connectionStatus == .disconnected ? "Status: Disconnected" : "Status: Connected"
-        return tooltip
+        tip += "Rate: \(currentInterval < 1 ? "\(currentInterval)s" : "\(Int(currentInterval))s")\n"
+        tip += connectionStatus == .connected ? "Status: Connected" : "Status: Disconnected"
+        return tip
     }
 
     // MARK: - MonitorLatencyDelegate
@@ -295,28 +229,26 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     func monitor(_ monitor: MonitorLatency, didUpdateLatency latency: TimeInterval, for endpoint: ServiceEndpoint) {
         rawLatency = latency
         connectionStatus = .connected
-        updateCombinedDisplay()
+        updateDisplay()
     }
 
     func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint) {
-        rawLatency = 0.0
+        rawLatency = 0
         connectionStatus = status
-        updateCombinedDisplay()
+        updateDisplay()
     }
 
     // MARK: - MonitorNetworkDelegate
 
-    func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double, uploadSpeed: Double) {
-        currentDownloadSpeed = Utilities.formatSpeed(downloadSpeed)
-        currentUploadSpeed = Utilities.formatSpeed(uploadSpeed)
+    func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double) {
+        currentDownloadSpeed = formatSpeed(downloadSpeed)
         connectionStatus = .connected
-        updateCombinedDisplay()
+        updateDisplay()
     }
 
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
-        currentDownloadSpeed = AppConstants.defaultValue
-        currentUploadSpeed = AppConstants.defaultValue
+        currentDownloadSpeed = "--"
         connectionStatus = status
-        updateCombinedDisplay()
+        updateDisplay()
     }
 }

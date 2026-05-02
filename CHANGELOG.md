@@ -4,6 +4,27 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.28] - 2026-05-02
+
+### 🔨 极致精简
+
+项目从"大而全"彻底转向"小工具"路线，大幅削减冗余代码和文件。
+
+**代码精简：**
+- 源文件从 10 个 → 5 个（App, Core, MenuBarController, MonitorLatency, MonitorNetwork）
+- 源码行数从 ~1150 行 → ~550 行（减少 52%）
+- 删除 BaseMonitor 抽象基类，定时器逻辑内联到具体监控类
+- 删除 ServiceManager 单例，服务列表改为平面常量
+- 删除 ConfigurationManager 单例（147 行 → 15 行 UserDefaults 扩展）
+- 删除 Utilities.swift 中 7 个未使用的工具函数
+- 删除速度滑动平均、配置导入导出、通知设置等未使用功能
+
+**文件清理：**
+- 删除 Docs/ 目录（7 个文档文件，~105KB）
+- 删除 Scripts/ 目录（code_quality_check.sh）
+- 删除 iMoniTests/ 目录（8 个测试文件，~650 行）
+- 更新 README.md 反映新结构
+
 ## [1.19] - 2025-11-19
 
 ### 🐛 修复问题

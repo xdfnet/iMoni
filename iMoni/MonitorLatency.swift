@@ -6,44 +6,58 @@ protocol MonitorLatencyDelegate: AnyObject {
     func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint)
 }
 
-class MonitorLatency: BaseMonitor {
+class MonitorLatency {
     weak var delegate: MonitorLatencyDelegate?
 
+    private var timer: Timer?
     private var currentEndpoint: ServiceEndpoint?
     private var currentConnection: NWConnection?
     private var currentTimeoutWorkItem: DispatchWorkItem?
+    private let queue = DispatchQueue(label: MonitorConstants.latencyQueueLabel, qos: .utility)
+    private var interval: TimeInterval
 
-    override init(queueLabel: String, interval: TimeInterval) {
-        super.init(queueLabel: queueLabel, interval: interval)
+    init(interval: TimeInterval = MonitorConstants.defaultInterval) {
+        self.interval = interval
     }
 
     func startMonitoring(_ endpoint: ServiceEndpoint) {
         stopMonitoring()
         currentEndpoint = endpoint
-        super.startMonitoring()
-        queue.async { [weak self] in
-            self?.performMonitoring()
-        }
+        startTimer()
+        queue.async { [weak self] in self?.ping() }
     }
 
-    override func stopMonitoring() {
-        super.stopMonitoring()
-        cleanupCurrentConnection()
+    func stopMonitoring() {
+        stopTimer()
+        cleanupConnection()
         currentEndpoint = nil
     }
 
-    override func performMonitoring() {
-        guard let endpoint = currentEndpoint else { return }
-        guard currentConnection == nil else { return }
-        pingEndpoint(endpoint)
+    func cleanup() {
+        stopMonitoring()
     }
 
-    override func cleanupResources() {
-        cleanupCurrentConnection()
+    func updateInterval(_ newInterval: TimeInterval) {
+        interval = newInterval
+        if timer != nil { startTimer() }
     }
 
-    private func pingEndpoint(_ endpoint: ServiceEndpoint) {
-        let startTime = Utilities.currentTimestamp()
+    private func startTimer() {
+        stopTimer()
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            self?.queue.async { self?.ping() }
+        }
+        timer?.tolerance = min(interval * 0.1, 0.1)
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    private func ping() {
+        guard let endpoint = currentEndpoint, currentConnection == nil else { return }
+        let startTime = CFAbsoluteTimeGetCurrent()
 
         let connection = NWConnection(
             host: NWEndpoint.Host(endpoint.host),
@@ -55,58 +69,52 @@ class MonitorLatency: BaseMonitor {
 
         currentTimeoutWorkItem?.cancel()
         let timeoutWorkItem = DispatchWorkItem { [weak self] in
-            self?.handleConnectionTimeout(for: endpoint, startTime: startTime)
+            self?.handleTimeout(for: endpoint, startTime: startTime)
         }
         currentTimeoutWorkItem = timeoutWorkItem
         DispatchQueue.global().asyncAfter(deadline: .now() + MonitorConstants.connectionTimeout, execute: timeoutWorkItem)
 
         connection.stateUpdateHandler = { [weak self] state in
-            self?.handleConnectionStateChange(state, for: endpoint, startTime: startTime, timeoutWorkItem: timeoutWorkItem)
+            self?.handleStateChange(state, for: endpoint, startTime: startTime, timeoutWorkItem: timeoutWorkItem)
         }
     }
 
-    private func handleConnectionStateChange(_ state: NWConnection.State, for endpoint: ServiceEndpoint, startTime: CFAbsoluteTime, timeoutWorkItem: DispatchWorkItem) {
+    private func handleStateChange(_ state: NWConnection.State, for endpoint: ServiceEndpoint, startTime: CFAbsoluteTime, timeoutWorkItem: DispatchWorkItem) {
         switch state {
         case .ready:
             timeoutWorkItem.cancel()
-            let latency = Utilities.timeDifference(from: startTime)
-            cleanupCurrentConnection()
-            Utilities.safeMainQueueCallback { [weak self] in
+            let latency = CFAbsoluteTimeGetCurrent() - startTime
+            cleanupConnection()
+            mainQueue { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.monitor(self, didUpdateLatency: latency, for: endpoint)
             }
-
         case .failed:
             timeoutWorkItem.cancel()
-            handleConnectionFailure(for: endpoint)
-
+            handleFailure(for: endpoint)
         case .cancelled:
             timeoutWorkItem.cancel()
-
         case .waiting, .preparing, .setup:
             break
-
         @unknown default:
-            #if DEBUG
-            Utilities.debugPrint("Unknown NWConnection state for \(endpoint.name): \(state)")
-            #endif
+            break
         }
     }
 
-    private func handleConnectionTimeout(for endpoint: ServiceEndpoint, startTime: CFAbsoluteTime) {
-        cleanupCurrentConnection()
-        handleConnectionFailure(for: endpoint)
+    private func handleTimeout(for endpoint: ServiceEndpoint, startTime: CFAbsoluteTime) {
+        cleanupConnection()
+        handleFailure(for: endpoint)
     }
 
-    private func handleConnectionFailure(for endpoint: ServiceEndpoint) {
-        cleanupCurrentConnection()
-        Utilities.safeMainQueueCallback { [weak self] in
+    private func handleFailure(for endpoint: ServiceEndpoint) {
+        cleanupConnection()
+        mainQueue { [weak self] in
             guard let self = self else { return }
-            self.delegate?.monitor(self, didFailWithError: ConnectionStatus.disconnected, for: endpoint)
+            self.delegate?.monitor(self, didFailWithError: .disconnected, for: endpoint)
         }
     }
 
-    private func cleanupCurrentConnection() {
+    private func cleanupConnection() {
         currentTimeoutWorkItem?.cancel()
         currentTimeoutWorkItem = nil
         currentConnection?.cancel()
