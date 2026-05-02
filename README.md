@@ -197,6 +197,23 @@ make clean             # 清理构建文件
 make test              # 运行测试
 ```
 
+### 测试状态（最新）
+
+- 测试时间：2026-05-02
+- 单元测试：`105/105` 通过
+- 主目标覆盖率（`iMoni.app`）：`52.85%`（`594/1124`）
+
+主要文件覆盖率：
+
+- `ServiceManager.swift`：`97.96%`
+- `MonitorLatency.swift`：`80.00%`
+- `Utilities.swift`：`72.62%`
+- `BaseMonitor.swift`：`70.67%`
+- `App.swift`：`63.33%`
+- `ConfigurationManager.swift`：`55.63%`
+- `MenuBarController.swift`：`53.16%`
+- `SharedTypes.swift`：`25.00%`
+
 ### 贡献指南
 
 1. Fork 项目
