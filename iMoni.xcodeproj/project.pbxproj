@@ -175,7 +175,7 @@
 					"@executable_path/../Frameworks",
 				);
 
-				MARKETING_VERSION = 1.3.1;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -328,7 +328,7 @@
 					"@executable_path/../Frameworks",
 				);
 
-				MARKETING_VERSION = 1.3.1;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
