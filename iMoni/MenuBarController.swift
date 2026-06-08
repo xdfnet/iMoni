@@ -1,8 +1,7 @@
 import Cocoa
 
-class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate {
+class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate, NSMenuDelegate {
     private var statusBarItem: NSStatusItem?
-    private var speedView: NetworkSpeedView?
     private let latencyMonitorDeepSeek = MonitorLatency()
     private let latencyMonitorOpenAI = MonitorLatency()
     private let networkMonitor = MonitorNetwork()
@@ -48,14 +47,12 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     private func setupStatusBar() {
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        let view = NetworkSpeedView(frame: NSRect(x: 0, y: 0, width: 120, height: NSStatusBar.system.thickness))
-        view.onClick = { [weak self] in
-            guard let self else { return }
-            let menu = self.buildMenu()
-            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: view.bounds.height), in: view)
+        if let button = statusBarItem?.button {
+            button.font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
         }
-        statusBarItem?.view = view
-        speedView = view
+        let menu = NSMenu()
+        menu.delegate = self
+        statusBarItem?.menu = menu
     }
 
     private func setupMonitors() {
@@ -67,8 +64,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private func applySettings() {
         if currentDisplayMode == .serviceLatency {
             networkMonitor.stopMonitoring()
-            latencyMonitorDeepSeek.startMonitoring(services[0]) // DeepSeek
-            latencyMonitorOpenAI.startMonitoring(services[1])   // OpenAI
+            latencyMonitorDeepSeek.startMonitoring(services[0])
+            latencyMonitorOpenAI.startMonitoring(services[1])
         } else {
             latencyMonitorDeepSeek.stopMonitoring()
             latencyMonitorOpenAI.stopMonitoring()
@@ -76,10 +73,10 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         }
     }
 
-    // MARK: - Menu
+    // MARK: - NSMenuDelegate
 
-    private func buildMenu() -> NSMenu {
-        let menu = NSMenu()
+    func menuWillOpen(_ menu: NSMenu) {
+        menu.removeAllItems()
 
         let viewItem = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
         let viewSub = NSMenu()
@@ -103,8 +100,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         let quit = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
-
-        return menu
     }
 
     @objc private func selectMode(_ sender: NSMenuItem) {
@@ -133,55 +128,49 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     // MARK: - Display
 
     private func updateDisplay() {
-        guard let view = speedView else { return }
+        let top: String
+        let bottom: String
+        let connected: Bool
 
         switch currentDisplayMode {
         case .serviceLatency:
-            let top = "OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")"
-            let bottom = "DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")"
-            view.topText = top
-            view.bottomText = bottom
-            connectionStatus = deepSeekConnected || openAIConnected ? .connected : .disconnected
-            view.isConnected = connectionStatus == .connected
-
-            let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
-            let attrs = [NSAttributedString.Key.font: font]
-            let tw = (top as NSString).size(withAttributes: attrs).width
-            let bw = (bottom as NSString).size(withAttributes: attrs).width
-            statusBarItem?.length = max(tw, bw) + 8
-
+            top = "OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")"
+            bottom = "DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")"
+            connected = deepSeekConnected || openAIConnected
+            connectionStatus = connected ? .connected : .disconnected
         case .networkSpeed:
-            view.topText = "↑\(currentUploadSpeed)"
-            view.bottomText = "↓\(currentDownloadSpeed)"
-            view.isConnected = connectionStatus == .connected
-
-            let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
-            let attrs = [NSAttributedString.Key.font: font]
-            let tw = (view.topText as NSString).size(withAttributes: attrs).width
-            let bw = (view.bottomText as NSString).size(withAttributes: attrs).width
-            statusBarItem?.length = max(tw, bw) + 8
+            top = "↑\(currentUploadSpeed)"
+            bottom = "↓\(currentDownloadSpeed)"
+            connected = connectionStatus == .connected
         }
 
-        view.needsDisplay = true
-        view.toolTip = tooltipText
+        statusBarItem?.button?.image = renderImage(top: top, bottom: bottom, connected: connected)
+        statusBarItem?.button?.toolTip = tooltipText
+    }
+
+    private func renderImage(top: String, bottom: String, connected: Bool) -> NSImage {
+        let color = connected ? NSColor.labelColor : NSColor.systemRed
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+
+        let topSize = (top as NSString).size(withAttributes: attrs)
+        let bottomSize = (bottom as NSString).size(withAttributes: attrs)
+        let width = max(topSize.width, bottomSize.width) + 6
+        let height = NSStatusBar.system.thickness
+
+        return NSImage(size: NSSize(width: width, height: height), flipped: false) { _ in
+            let halfH = height / 2
+            (top as NSString).draw(at: NSPoint(x: 2, y: halfH + (halfH - topSize.height) / 2), withAttributes: attrs)
+            (bottom as NSString).draw(at: NSPoint(x: 2, y: (halfH - bottomSize.height) / 2), withAttributes: attrs)
+            return true
+        }
     }
 
     private var tooltipText: String {
         if currentDisplayMode == .serviceLatency {
-            return """
-            iMoni
-            OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")
-            DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")
-            Status: \(deepSeekConnected || openAIConnected ? "Connected" : "Disconnected")
-            """
-        } else {
-            return """
-            iMoni
-            ↑ \(currentUploadSpeed)
-            ↓ \(currentDownloadSpeed)
-            Status: \(connectionStatus == .connected ? "Connected" : "Disconnected")
-            """
+            return "iMoni\nOpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")\nDeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")\nStatus: \(deepSeekConnected || openAIConnected ? "Connected" : "Disconnected")"
         }
+        return "iMoni\n↑ \(currentUploadSpeed)\n↓ \(currentDownloadSpeed)\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
     }
 
     // MARK: - MonitorLatencyDelegate
@@ -221,38 +210,5 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         currentDownloadSpeed = "--"
         connectionStatus = status
         if currentDisplayMode == .networkSpeed { updateDisplay() }
-    }
-}
-
-// MARK: - Custom Menu Bar View
-
-class NetworkSpeedView: NSView {
-    var topText: String = "" { didSet { needsDisplay = true } }
-    var bottomText: String = "" { didSet { needsDisplay = true } }
-    var isConnected: Bool = true { didSet { needsDisplay = true } }
-    var onClick: (() -> Void)?
-
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        let color = isConnected ? NSColor.labelColor : NSColor.systemRed
-        let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
-        let halfH = bounds.height / 2
-        let leftX: CGFloat = 2
-
-        let top = topText as NSString
-        let ts = top.size(withAttributes: attrs)
-        top.draw(at: NSPoint(x: leftX, y: halfH + (halfH - ts.height) / 2),
-                 withAttributes: attrs)
-
-        let bottom = bottomText as NSString
-        let bs = bottom.size(withAttributes: attrs)
-        bottom.draw(at: NSPoint(x: leftX, y: (halfH - bs.height) / 2),
-                    withAttributes: attrs)
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        onClick?()
     }
 }

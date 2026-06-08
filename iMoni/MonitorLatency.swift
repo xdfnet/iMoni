@@ -1,4 +1,5 @@
 import Foundation
+import Network
 
 protocol MonitorLatencyDelegate: AnyObject {
     func monitor(_ monitor: MonitorLatency, didUpdateLatency latency: TimeInterval, for endpoint: ServiceEndpoint)
@@ -10,6 +11,8 @@ class MonitorLatency {
 
     private var timer: Timer?
     private var currentEndpoint: ServiceEndpoint?
+    private var currentConnection: NWConnection?
+    private var currentTimeoutWorkItem: DispatchWorkItem?
     private let queue = DispatchQueue(label: MonitorConstants.latencyQueueLabel, qos: .utility)
     private var interval: TimeInterval
     private var isPinging = false
@@ -27,7 +30,9 @@ class MonitorLatency {
 
     func stopMonitoring() {
         stopTimer()
+        cleanupConnection()
         currentEndpoint = nil
+        isPinging = false
     }
 
     func cleanup() {
@@ -55,66 +60,59 @@ class MonitorLatency {
     private func ping() {
         guard let endpoint = currentEndpoint, !isPinging else { return }
         isPinging = true
-        let start = CFAbsoluteTimeGetCurrent()
+        let startTime = CFAbsoluteTimeGetCurrent()
 
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/sbin/ping")
-        task.arguments = ["-c", "1", "-t", "1", endpoint.host]
+        let connection = NWConnection(
+            host: NWEndpoint.Host(endpoint.host),
+            port: NWEndpoint.Port(integerLiteral: UInt16(endpoint.port)),
+            using: .tcp
+        )
+        currentConnection = connection
+        connection.start(queue: queue)
 
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = pipe
-
-        task.terminationHandler = { [weak self] process in
+        let timeoutWorkItem = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            defer { self.isPinging = false }
-
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? ""
-            let elapsed = CFAbsoluteTimeGetCurrent() - start
-
-            if process.terminationStatus == 0 {
-                // 解析 ping 输出: "time=12.345 ms"
-                if let timeStr = self.parsePingTime(from: output) {
-                    let latency = timeStr / 1000.0 // ms → seconds
-                    mainQueue {
-                        self.delegate?.monitor(self, didUpdateLatency: latency, for: endpoint)
-                    }
-                } else {
-                    // 有输出但没解析出时间，用总耗时作为延迟
-                    mainQueue {
-                        self.delegate?.monitor(self, didUpdateLatency: min(elapsed, 2.0), for: endpoint)
-                    }
-                }
-            } else {
-                mainQueue {
-                    self.delegate?.monitor(self, didFailWithError: .disconnected, for: endpoint)
-                }
-            }
-        }
-
-        do {
-            try task.run()
-        } catch {
-            isPinging = false
+            self.cleanupConnection()
+            self.isPinging = false
             mainQueue {
                 self.delegate?.monitor(self, didFailWithError: .disconnected, for: endpoint)
             }
         }
-    }
+        currentTimeoutWorkItem = timeoutWorkItem
+        DispatchQueue.global().asyncAfter(deadline: .now() + MonitorConstants.connectionTimeout, execute: timeoutWorkItem)
 
-    /// 从 ping 输出中提取 "time=XX.XXX" 或 "time<XX.XXX" 毫秒值
-    private func parsePingTime(from output: String) -> Double? {
-        // macOS ping: "time=12.345 ms" 或 "time<1.0 ms"
-        let patterns = [
-            try? NSRegularExpression(pattern: "time[=<](\\d+(?:\\.\\d+)?)\\s*ms"),
-        ]
-        for pattern in patterns.compactMap({ $0 }) {
-            if let match = pattern.firstMatch(in: output, range: NSRange(output.startIndex..., in: output)),
-               let range = Range(match.range(at: 1), in: output) {
-                return Double(output[range])
+        connection.stateUpdateHandler = { [weak self] state in
+            guard let self else { return }
+            switch state {
+            case .ready:
+                timeoutWorkItem.cancel()
+                let latency = CFAbsoluteTimeGetCurrent() - startTime
+                self.cleanupConnection()
+                self.isPinging = false
+                mainQueue {
+                    self.delegate?.monitor(self, didUpdateLatency: latency, for: endpoint)
+                }
+            case .failed:
+                timeoutWorkItem.cancel()
+                self.cleanupConnection()
+                self.isPinging = false
+                mainQueue {
+                    self.delegate?.monitor(self, didFailWithError: .disconnected, for: endpoint)
+                }
+            case .cancelled:
+                timeoutWorkItem.cancel()
+            case .waiting, .preparing, .setup:
+                break
+            @unknown default:
+                break
             }
         }
-        return nil
+    }
+
+    private func cleanupConnection() {
+        currentTimeoutWorkItem?.cancel()
+        currentTimeoutWorkItem = nil
+        currentConnection?.cancel()
+        currentConnection = nil
     }
 }
