@@ -18,13 +18,8 @@ struct ServiceEndpoint {
 // MARK: - AI Services
 
 let services: [ServiceEndpoint] = [
-    ServiceEndpoint(name: "OpenAI", host: "api.openai.com"),
-    ServiceEndpoint(name: "Claude", host: "api.anthropic.com"),
-    ServiceEndpoint(name: "Gemini", host: "generativelanguage.googleapis.com"),
     ServiceEndpoint(name: "DeepSeek", host: "api.deepseek.com"),
-    ServiceEndpoint(name: "GLM", host: "open.bigmodel.cn"),
-    ServiceEndpoint(name: "Qwen", host: "dashscope.aliyuncs.com"),
-    ServiceEndpoint(name: "Kimi", host: "api.moonshot.cn"),
+    ServiceEndpoint(name: "OpenAI", host: "api.openai.com"),
 ]
 
 // MARK: - Enums
@@ -39,12 +34,9 @@ enum DisplayMode: String, CaseIterable {
     case networkSpeed = "Network"
 }
 
-// MARK: - Constants
-
 enum MonitorConstants {
     static let connectionTimeout: TimeInterval = 0.5
     static let defaultInterval: TimeInterval = 1.0
-    static let availableIntervals: [TimeInterval] = [0.5, 1.0, 2.0, 5.0]
     static let maxReasonableSpeed: Double = 1000.0
     static let latencyQueueLabel = "com.imoni.latency"
     static let networkQueueLabel = "com.imoni.network"
@@ -62,19 +54,6 @@ extension UserDefaults {
         set { set(newValue.rawValue, forKey: "displayMode") }
     }
 
-    var monitoringInterval: TimeInterval {
-        get {
-            let val = double(forKey: "monitoringInterval")
-            if val > 0 { return max(0.5, min(val, 60.0)) }
-            return MonitorConstants.defaultInterval
-        }
-        set { set(max(0.5, min(newValue, 60.0)), forKey: "monitoringInterval") }
-    }
-
-    var lastServiceName: String? {
-        get { string(forKey: "lastServiceName") }
-        set { set(newValue, forKey: "lastServiceName") }
-    }
 }
 
 // MARK: - Formatting & Dispatch

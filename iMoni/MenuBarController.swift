@@ -2,14 +2,18 @@ import Cocoa
 
 class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate {
     private var statusBarItem: NSStatusItem?
-    private let latencyMonitor = MonitorLatency()
+    private var speedView: NetworkSpeedView?
+    private let latencyMonitorDeepSeek = MonitorLatency()
+    private let latencyMonitorOpenAI = MonitorLatency()
     private let networkMonitor = MonitorNetwork()
-    private var currentEndpoint: ServiceEndpoint?
-    private var rawLatency: TimeInterval = 0
+    private var deepSeekLatency: TimeInterval = 0
+    private var openAILatency: TimeInterval = 0
+    private var deepSeekConnected = false
+    private var openAIConnected = false
+    private var currentUploadSpeed = "--"
     private var currentDownloadSpeed = "--"
     private var connectionStatus: ConnectionStatus = .disconnected
     private var currentDisplayMode: DisplayMode = .serviceLatency
-    private var currentInterval: TimeInterval = MonitorConstants.defaultInterval
 
     override init() {
         super.init()
@@ -21,13 +25,15 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     func cleanup() {
-        latencyMonitor.stopMonitoring()
+        latencyMonitorDeepSeek.stopMonitoring()
+        latencyMonitorOpenAI.stopMonitoring()
         networkMonitor.stopMonitoring()
         statusBarItem = nil
     }
 
     func suspend() {
-        latencyMonitor.stopMonitoring()
+        latencyMonitorDeepSeek.stopMonitoring()
+        latencyMonitorOpenAI.stopMonitoring()
         networkMonitor.stopMonitoring()
         statusBarItem = nil
     }
@@ -42,47 +48,35 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     private func setupStatusBar() {
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let button = statusBarItem?.button {
-            button.font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-            button.action = #selector(statusBarButtonClicked)
-            button.target = self
+        let view = NetworkSpeedView(frame: NSRect(x: 0, y: 0, width: 120, height: NSStatusBar.system.thickness))
+        view.onClick = { [weak self] in
+            guard let self else { return }
+            let menu = self.buildMenu()
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: view.bounds.height), in: view)
         }
+        statusBarItem?.view = view
+        speedView = view
     }
 
     private func setupMonitors() {
-        latencyMonitor.delegate = self
+        latencyMonitorDeepSeek.delegate = self
+        latencyMonitorOpenAI.delegate = self
         networkMonitor.delegate = self
     }
 
     private func applySettings() {
         if currentDisplayMode == .serviceLatency {
-            if let endpoint = currentEndpoint {
-                latencyMonitor.startMonitoring(endpoint)
-            } else {
-                currentEndpoint = services.first
-                if let endpoint = currentEndpoint { latencyMonitor.startMonitoring(endpoint) }
-            }
             networkMonitor.stopMonitoring()
+            latencyMonitorDeepSeek.startMonitoring(services[0]) // DeepSeek
+            latencyMonitorOpenAI.startMonitoring(services[1])   // OpenAI
         } else {
-            latencyMonitor.stopMonitoring()
-            networkMonitor.startMonitoring(interval: currentInterval)
+            latencyMonitorDeepSeek.stopMonitoring()
+            latencyMonitorOpenAI.stopMonitoring()
+            networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         }
     }
 
-    private func switchTo(_ endpoint: ServiceEndpoint) {
-        currentEndpoint = endpoint
-        latencyMonitor.startMonitoring(endpoint)
-        saveSettings()
-        updateDisplay()
-    }
-
     // MARK: - Menu
-
-    @objc private func statusBarButtonClicked() {
-        statusBarItem?.menu = buildMenu()
-        statusBarItem?.button?.performClick(nil)
-        statusBarItem?.menu = nil
-    }
 
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
@@ -100,33 +94,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         menu.addItem(viewItem)
         menu.addItem(.separator())
 
-        let serviceItem = NSMenuItem(title: "Services", action: nil, keyEquivalent: "")
-        let serviceSub = NSMenu()
-        for svc in services {
-            let item = NSMenuItem(title: svc.name, action: #selector(selectService(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = svc
-            item.state = svc.name == currentEndpoint?.name ? .on : .off
-            serviceSub.addItem(item)
-        }
-        serviceItem.submenu = serviceSub
-        menu.addItem(serviceItem)
-        menu.addItem(.separator())
-
-        let rateItem = NSMenuItem(title: "Rate", action: nil, keyEquivalent: "")
-        let rateSub = NSMenu()
-        for interval in MonitorConstants.availableIntervals {
-            let title = interval < 1 ? "\(interval)s" : "\(Int(interval))s"
-            let item = NSMenuItem(title: title, action: #selector(selectInterval(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = interval
-            item.state = interval == currentInterval ? .on : .off
-            rateSub.addItem(item)
-        }
-        rateItem.submenu = rateSub
-        menu.addItem(rateItem)
-        menu.addItem(.separator())
-
         let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
         let about = NSMenuItem(title: "iMoni v\(ver)", action: nil, keyEquivalent: "")
         about.isEnabled = false
@@ -141,27 +108,12 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     @objc private func selectMode(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String, let mode = DisplayMode(rawValue: raw) else { return }
+        guard let raw = sender.representedObject as? String,
+              let mode = DisplayMode(rawValue: raw) else { return }
         currentDisplayMode = mode
         saveSettings()
         applySettings()
         updateDisplay()
-    }
-
-    @objc private func selectService(_ sender: NSMenuItem) {
-        guard let endpoint = sender.representedObject as? ServiceEndpoint else { return }
-        if currentDisplayMode != .serviceLatency {
-            currentDisplayMode = .serviceLatency
-        }
-        switchTo(endpoint)
-    }
-
-    @objc private func selectInterval(_ sender: NSMenuItem) {
-        guard let interval = sender.representedObject as? TimeInterval else { return }
-        currentInterval = interval
-        saveSettings()
-        latencyMonitor.updateInterval(interval)
-        networkMonitor.updateInterval(interval)
     }
 
     @objc private func quitApp() {
@@ -171,84 +123,136 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     // MARK: - Settings
 
     private func loadSettings() {
-        let ud = UserDefaults.standard
-        currentDisplayMode = ud.displayMode
-        currentInterval = ud.monitoringInterval
-        if let name = ud.lastServiceName {
-            currentEndpoint = services.first { $0.name == name }
-        }
+        currentDisplayMode = UserDefaults.standard.displayMode
     }
 
     private func saveSettings() {
-        let ud = UserDefaults.standard
-        ud.displayMode = currentDisplayMode
-        ud.monitoringInterval = currentInterval
-        ud.lastServiceName = currentEndpoint?.name
+        UserDefaults.standard.displayMode = currentDisplayMode
     }
 
     // MARK: - Display
 
     private func updateDisplay() {
-        let text: String
+        guard let view = speedView else { return }
+
         switch currentDisplayMode {
         case .serviceLatency:
-            let name = currentEndpoint?.name ?? "--"
-            if connectionStatus != .connected { text = "\(name): --" }
-            else { text = "\(name): \(formatLatency(rawLatency))" }
+            let top = "OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")"
+            let bottom = "DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")"
+            view.topText = top
+            view.bottomText = bottom
+            connectionStatus = deepSeekConnected || openAIConnected ? .connected : .disconnected
+            view.isConnected = connectionStatus == .connected
+
+            let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
+            let attrs = [NSAttributedString.Key.font: font]
+            let tw = (top as NSString).size(withAttributes: attrs).width
+            let bw = (bottom as NSString).size(withAttributes: attrs).width
+            statusBarItem?.length = max(tw, bw) + 8
+
         case .networkSpeed:
-            text = "↓\(currentDownloadSpeed)"
+            view.topText = "↑\(currentUploadSpeed)"
+            view.bottomText = "↓\(currentDownloadSpeed)"
+            view.isConnected = connectionStatus == .connected
+
+            let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
+            let attrs = [NSAttributedString.Key.font: font]
+            let tw = (view.topText as NSString).size(withAttributes: attrs).width
+            let bw = (view.bottomText as NSString).size(withAttributes: attrs).width
+            statusBarItem?.length = max(tw, bw) + 8
         }
-        mainQueue { [weak self] in
-            guard let self = self else { return }
-            if let button = self.statusBarItem?.button {
-                let color: NSColor = self.connectionStatus == .connected ? .labelColor : .systemRed
-                let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color]
-                button.attributedTitle = NSAttributedString(string: text, attributes: attrs)
-                button.toolTip = self.tooltipText
-            }
-        }
+
+        view.needsDisplay = true
+        view.toolTip = tooltipText
     }
 
     private var tooltipText: String {
-        var tip = "iMoni\n"
-        switch currentDisplayMode {
-        case .serviceLatency:
-            if let ep = currentEndpoint {
-                tip += "\(ep.name) (\(ep.host):\(ep.port))\nLatency: \(formatLatency(rawLatency))\n"
-            }
-        case .networkSpeed:
-            tip += "↓ \(currentDownloadSpeed)\n"
+        if currentDisplayMode == .serviceLatency {
+            return """
+            iMoni
+            OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")
+            DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")
+            Status: \(deepSeekConnected || openAIConnected ? "Connected" : "Disconnected")
+            """
+        } else {
+            return """
+            iMoni
+            ↑ \(currentUploadSpeed)
+            ↓ \(currentDownloadSpeed)
+            Status: \(connectionStatus == .connected ? "Connected" : "Disconnected")
+            """
         }
-        tip += "Rate: \(currentInterval < 1 ? "\(currentInterval)s" : "\(Int(currentInterval))s")\n"
-        tip += connectionStatus == .connected ? "Status: Connected" : "Status: Disconnected"
-        return tip
     }
 
     // MARK: - MonitorLatencyDelegate
 
     func monitor(_ monitor: MonitorLatency, didUpdateLatency latency: TimeInterval, for endpoint: ServiceEndpoint) {
-        rawLatency = latency
-        connectionStatus = .connected
-        updateDisplay()
+        if endpoint.name == "DeepSeek" {
+            deepSeekLatency = latency
+            deepSeekConnected = true
+        } else if endpoint.name == "OpenAI" {
+            openAILatency = latency
+            openAIConnected = true
+        }
+        if currentDisplayMode == .serviceLatency { updateDisplay() }
     }
 
     func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint) {
-        rawLatency = 0
-        connectionStatus = status
-        updateDisplay()
+        if endpoint.name == "DeepSeek" {
+            deepSeekLatency = 0
+            deepSeekConnected = false
+        } else if endpoint.name == "OpenAI" {
+            openAILatency = 0
+            openAIConnected = false
+        }
+        if currentDisplayMode == .serviceLatency { updateDisplay() }
     }
 
     // MARK: - MonitorNetworkDelegate
 
-    func networkStats(_ stats: MonitorNetwork, didUpdateDownloadSpeed downloadSpeed: Double) {
+    func networkStats(_ stats: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
+        currentUploadSpeed = formatSpeed(uploadSpeed)
         currentDownloadSpeed = formatSpeed(downloadSpeed)
         connectionStatus = .connected
-        updateDisplay()
+        if currentDisplayMode == .networkSpeed { updateDisplay() }
     }
 
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
         currentDownloadSpeed = "--"
         connectionStatus = status
-        updateDisplay()
+        if currentDisplayMode == .networkSpeed { updateDisplay() }
+    }
+}
+
+// MARK: - Custom Menu Bar View
+
+class NetworkSpeedView: NSView {
+    var topText: String = "" { didSet { needsDisplay = true } }
+    var bottomText: String = "" { didSet { needsDisplay = true } }
+    var isConnected: Bool = true { didSet { needsDisplay = true } }
+    var onClick: (() -> Void)?
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        let color = isConnected ? NSColor.labelColor : NSColor.systemRed
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+        let halfH = bounds.height / 2
+        let leftX: CGFloat = 2
+
+        let top = topText as NSString
+        let ts = top.size(withAttributes: attrs)
+        top.draw(at: NSPoint(x: leftX, y: halfH + (halfH - ts.height) / 2),
+                 withAttributes: attrs)
+
+        let bottom = bottomText as NSString
+        let bs = bottom.size(withAttributes: attrs)
+        bottom.draw(at: NSPoint(x: leftX, y: (halfH - bs.height) / 2),
+                    withAttributes: attrs)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        onClick?()
     }
 }
