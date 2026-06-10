@@ -1,16 +1,26 @@
 import Cocoa
 
-class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate, NSMenuDelegate {
+class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate, MonitorMemoryDelegate, MonitorCPUDelegate, MonitorGPUDelegate, NSMenuDelegate {
     private var statusBarItem: NSStatusItem?
     private let latencyMonitorDeepSeek = MonitorLatency()
     private let latencyMonitorOpenAI = MonitorLatency()
     private let networkMonitor = MonitorNetwork()
+    private let memoryMonitor = MonitorMemory()
+    private let cpuMonitor = MonitorCPU()
+    private let gpuMonitor = MonitorGPU()
     private var deepSeekLatency: TimeInterval = 0
     private var openAILatency: TimeInterval = 0
     private var deepSeekConnected = false
     private var openAIConnected = false
     private var currentUploadSpeed = "--"
     private var currentDownloadSpeed = "--"
+    private var currentMemoryUsed: Double = 0
+    private var currentMemoryPercent: Double = 0
+    private var memoryAvailable = false
+    private var currentCPUPercent: Double = 0
+    private var currentGPUPercent: Double = 0
+    private var cpuAvailable = false
+    private var gpuAvailable = false
     private var connectionStatus: ConnectionStatus = .disconnected
     private var currentDisplayMode: DisplayMode = .serviceLatency
 
@@ -27,6 +37,9 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         latencyMonitorDeepSeek.stopMonitoring()
         latencyMonitorOpenAI.stopMonitoring()
         networkMonitor.stopMonitoring()
+        memoryMonitor.stopMonitoring()
+        cpuMonitor.stopMonitoring()
+        gpuMonitor.stopMonitoring()
         statusBarItem = nil
     }
 
@@ -34,6 +47,9 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         latencyMonitorDeepSeek.stopMonitoring()
         latencyMonitorOpenAI.stopMonitoring()
         networkMonitor.stopMonitoring()
+        memoryMonitor.stopMonitoring()
+        cpuMonitor.stopMonitoring()
+        gpuMonitor.stopMonitoring()
         statusBarItem = nil
     }
 
@@ -59,17 +75,41 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         latencyMonitorDeepSeek.delegate = self
         latencyMonitorOpenAI.delegate = self
         networkMonitor.delegate = self
+        memoryMonitor.delegate = self
+        cpuMonitor.delegate = self
+        gpuMonitor.delegate = self
     }
 
     private func applySettings() {
-        if currentDisplayMode == .serviceLatency {
+        switch currentDisplayMode {
+        case .serviceLatency:
             networkMonitor.stopMonitoring()
+            memoryMonitor.stopMonitoring()
+            cpuMonitor.stopMonitoring()
+            gpuMonitor.stopMonitoring()
             latencyMonitorDeepSeek.startMonitoring(services[0])
             latencyMonitorOpenAI.startMonitoring(services[1])
-        } else {
+        case .networkSpeed:
             latencyMonitorDeepSeek.stopMonitoring()
             latencyMonitorOpenAI.stopMonitoring()
+            memoryMonitor.stopMonitoring()
+            cpuMonitor.stopMonitoring()
+            gpuMonitor.stopMonitoring()
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
+        case .memoryUsage:
+            latencyMonitorDeepSeek.stopMonitoring()
+            latencyMonitorOpenAI.stopMonitoring()
+            networkMonitor.stopMonitoring()
+            cpuMonitor.stopMonitoring()
+            gpuMonitor.stopMonitoring()
+            memoryMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
+        case .systemUsage:
+            latencyMonitorDeepSeek.stopMonitoring()
+            latencyMonitorOpenAI.stopMonitoring()
+            networkMonitor.stopMonitoring()
+            memoryMonitor.stopMonitoring()
+            cpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
+            gpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         }
     }
 
@@ -91,10 +131,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         menu.addItem(viewItem)
         menu.addItem(.separator())
 
-        let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-        let about = NSMenuItem(title: "iMoni v\(ver)", action: nil, keyEquivalent: "")
-        about.isEnabled = false
-        menu.addItem(about)
         menu.addItem(.separator())
 
         let quit = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
@@ -142,6 +178,18 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             top = "↑\(currentUploadSpeed)"
             bottom = "↓\(currentDownloadSpeed)"
             connected = connectionStatus == .connected
+        case .memoryUsage:
+            let used = Int(round(currentMemoryUsed))
+            let pct = Int(round(currentMemoryPercent))
+            top = "MEM \(used) GB"
+            bottom = "RAM \(pct)%"
+            connected = memoryAvailable
+        case .systemUsage:
+            let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
+            let gpuStr = gpuAvailable ? "\(Int(round(currentGPUPercent)))%" : "--"
+            top = "CPU \(cpuStr)"
+            bottom = "GPU \(gpuStr)"
+            connected = cpuAvailable || gpuAvailable
         }
 
         statusBarItem?.button?.image = renderImage(top: top, bottom: bottom, connected: connected)
@@ -167,10 +215,20 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     private var tooltipText: String {
-        if currentDisplayMode == .serviceLatency {
+        switch currentDisplayMode {
+        case .serviceLatency:
             return "iMoni\nOpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")\nDeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")\nStatus: \(deepSeekConnected || openAIConnected ? "Connected" : "Disconnected")"
+        case .networkSpeed:
+            return "iMoni\n↑ \(currentUploadSpeed)\n↓ \(currentDownloadSpeed)\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
+        case .memoryUsage:
+            let used = Int(round(currentMemoryUsed))
+            let pct = Int(round(currentMemoryPercent))
+            return "iMoni\nMemory: \(used) GB (\(pct)%)\nStatus: \(memoryAvailable ? "OK" : "Failed")"
+        case .systemUsage:
+            let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
+            let gpuStr = gpuAvailable ? "\(Int(round(currentGPUPercent)))%" : "--"
+            return "iMoni\nCPU: \(cpuStr)\nGPU: \(gpuStr)"
         }
-        return "iMoni\n↑ \(currentUploadSpeed)\n↓ \(currentDownloadSpeed)\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
     }
 
     // MARK: - MonitorLatencyDelegate
@@ -210,5 +268,45 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         currentDownloadSpeed = "--"
         connectionStatus = status
         if currentDisplayMode == .networkSpeed { updateDisplay() }
+    }
+
+    // MARK: - MonitorMemoryDelegate
+
+    func memoryMonitor(_ monitor: MonitorMemory, didUpdateMemoryUsed usedGB: Double, percent: Double) {
+        currentMemoryUsed = usedGB
+        currentMemoryPercent = percent
+        memoryAvailable = true
+        if currentDisplayMode == .memoryUsage { updateDisplay() }
+    }
+
+    func memoryMonitorDidFail(_ monitor: MonitorMemory) {
+        memoryAvailable = false
+        if currentDisplayMode == .memoryUsage { updateDisplay() }
+    }
+
+    // MARK: - MonitorCPUDelegate
+
+    func cpuMonitor(_ monitor: MonitorCPU, didUpdateCPUUsage percent: Double) {
+        currentCPUPercent = percent
+        cpuAvailable = true
+        if currentDisplayMode == .systemUsage { updateDisplay() }
+    }
+
+    func cpuMonitorDidFail(_ monitor: MonitorCPU) {
+        cpuAvailable = false
+        if currentDisplayMode == .systemUsage { updateDisplay() }
+    }
+
+    // MARK: - MonitorGPUDelegate
+
+    func gpuMonitor(_ monitor: MonitorGPU, didUpdateGPUUsage percent: Double) {
+        currentGPUPercent = percent
+        gpuAvailable = true
+        if currentDisplayMode == .systemUsage { updateDisplay() }
+    }
+
+    func gpuMonitorDidFail(_ monitor: MonitorGPU) {
+        gpuAvailable = false
+        if currentDisplayMode == .systemUsage { updateDisplay() }
     }
 }

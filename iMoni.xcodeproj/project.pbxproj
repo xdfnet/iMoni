@@ -12,6 +12,9 @@
 		3A0180D06BD98C1132C2AE52 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D82B52906E1EC1492A1678 /* MenuBarController.swift */; };
 		4258CDBA413D9809CB58E9F5 /* MonitorLatency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9666341B4C81F06B8D679B49 /* MonitorLatency.swift */; };
 		9308B38EA8F051F3DBBA601C /* MonitorNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */; };
+		C9D4F8E3B5D7F9C1E3F5B7D9 /* MonitorMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E7D6C5B4A3F2E1D0C9B8A7 /* MonitorMemory.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* MonitorCPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* MonitorGPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */; };
 		DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3CC934CE62FFFAF200C3C135 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -34,6 +37,9 @@
 		FEDCBA0987654321ABCDEF01 /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
 		EB36529EA52167AA649BA1FD /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		F5D82B52906E1EC1492A1678 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		F8E7D6C5B4A3F2E1D0C9B8A7 /* MonitorMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorMemory.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorCPU.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorGPU.swift; sourceTree = "<group>"; };
 		F60B6ABB8D8F37687EBA30B8 /* iMoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iMoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -49,6 +55,9 @@
 				F5D82B52906E1EC1492A1678 /* MenuBarController.swift */,
 				9666341B4C81F06B8D679B49 /* MonitorLatency.swift */,
 				3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */,
+				F8E7D6C5B4A3F2E1D0C9B8A7 /* MonitorMemory.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */,
 			);
 			path = iMoni;
 			sourceTree = "<group>";
@@ -145,6 +154,9 @@
 				3A0180D06BD98C1132C2AE52 /* MenuBarController.swift in Sources */,
 				4258CDBA413D9809CB58E9F5 /* MonitorLatency.swift in Sources */,
 				9308B38EA8F051F3DBBA601C /* MonitorNetwork.swift in Sources */,
+				C9D4F8E3B5D7F9C1E3F5B7D9 /* MonitorMemory.swift in Sources */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* MonitorCPU.swift in Sources */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* MonitorGPU.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,7 +187,7 @@
 					"@executable_path/../Frameworks",
 				);
 
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 1.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -328,7 +340,7 @@
 					"@executable_path/../Frameworks",
 				);
 
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 1.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
