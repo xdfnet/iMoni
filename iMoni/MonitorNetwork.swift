@@ -8,7 +8,7 @@ protocol MonitorNetworkDelegate: AnyObject {
 class MonitorNetwork {
     weak var delegate: MonitorNetworkDelegate?
 
-    private var sourceTimer: DispatchSourceTimer?
+    private let timer = TimerHelper()
     private var isRunning = false
     private let queue = DispatchQueue(label: MonitorConstants.networkQueueLabel, qos: .utility)
     private var interval: TimeInterval
@@ -16,18 +16,13 @@ class MonitorNetwork {
     private var lastBytesSent: UInt64 = 0
     private var lastUpdateTime: CFAbsoluteTime = 0
 
-    /// 累计总流量（从开始监控起）
     private var totalDownloadBytes: UInt64 = 0
     private var totalUploadBytes: UInt64 = 0
-
-    /// 主接口链路速率 (Mbps)，用于动态毛刺阈值
     private var lastTransmitRate: Double = 0
 
     init(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
     }
-
-    deinit { stopMonitoring() }
 
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         guard let initial = totalBytes() else {
@@ -41,12 +36,12 @@ class MonitorNetwork {
         lastUpdateTime = CFAbsoluteTimeGetCurrent()
         self.interval = interval
         isRunning = true
-        startTimer()
+        timer.start(queue: queue, interval: interval) { [weak self] in self?.update() }
     }
 
     func stopMonitoring() {
         isRunning = false
-        stopTimer()
+        timer.stop()
         lastBytesReceived = 0
         lastBytesSent = 0
         totalDownloadBytes = 0
@@ -58,27 +53,12 @@ class MonitorNetwork {
 
     func updateInterval(_ newInterval: TimeInterval) {
         interval = newInterval
-        if sourceTimer != nil { startTimer() }
+        if timer.isActive {
+            timer.start(queue: queue, interval: interval) { [weak self] in self?.update() }
+        }
     }
 
-    // MARK: - Timer (DispatchSource)
-
-    private func startTimer() {
-        stopTimer()
-        let t = DispatchSource.makeTimerSource(queue: queue)
-        let ms = Int(interval * 1000)
-        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
-        t.setEventHandler { [weak self] in self?.update() }
-        t.activate()
-        sourceTimer = t
-    }
-
-    private func stopTimer() {
-        sourceTimer?.cancel()
-        sourceTimer = nil
-    }
-
-    // MARK: - Data (unchanged)
+    // MARK: - Data
 
     private func update() {
         guard isRunning else { return }
@@ -94,7 +74,6 @@ class MonitorNetwork {
             return
         }
 
-        // 按字节计算差值（不经过 MB/s 转换，避免精度损失）
         var diffReceived: UInt64 = 0
         var diffSent: UInt64 = 0
 
@@ -108,23 +87,19 @@ class MonitorNetwork {
         lastBytesReceived = current.1
         lastBytesSent = current.0
 
-        // 动态毛刺阈值：链路速率 × 1.5 倍容差（按间隔换算为字节）
         let maxDelta: UInt64 = {
             let intervalSec = max(self.interval, 0.5)
             if lastTransmitRate > 0 {
-                // rate(Mbps) → bits/s → bytes/s → ×1.5 容差 → ×interval
                 return UInt64(lastTransmitRate * 1_000_000 / 8 * 1.5 * intervalSec)
             }
-            return UInt64(2_000_000_000 * intervalSec) // 16 Gbps fallback
+            return UInt64(2_000_000_000 * intervalSec)
         }()
         if diffReceived > maxDelta { diffReceived = 0 }
         if diffSent > maxDelta { diffSent = 0 }
 
-        // 累计总流量
         totalDownloadBytes += diffReceived
         totalUploadBytes += diffSent
 
-        // 转为 MB/s 供显示
         let speedDown = Double(diffReceived) / elapsed / (1000.0 * 1000.0)
         let speedUp = Double(diffSent) / elapsed / (1000.0 * 1000.0)
 
@@ -136,7 +111,6 @@ class MonitorNetwork {
         }
     }
 
-    /// 遍历非 loopback 接口，累加上下行总字节数，并捕获主接口链路速率
     private func totalBytes() -> (UInt64, UInt64)? {
         var ifaddr: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&ifaddr) == 0, let start = ifaddr else { return nil }
@@ -157,14 +131,11 @@ class MonitorNetwork {
                 totalSent += UInt64(stats.ifi_obytes)
                 totalReceived += UInt64(stats.ifi_ibytes)
                 let baud = UInt64(stats.ifi_baudrate)
-                if baud > maxBaud {
-                    maxBaud = baud
-                }
+                if baud > maxBaud { maxBaud = baud }
             }
             cursor = cur.pointee.ifa_next
         }
 
-        // 缓存最高链路速率（bps → Mbps）
         if maxBaud > 0 {
             lastTransmitRate = Double(maxBaud) / 1_000_000.0
         }

@@ -64,9 +64,12 @@ func formatLatency(_ latency: TimeInterval) -> String {
     String(format: "%.0fms", latency * 1000)
 }
 
-func formatSpeed(_ speed: Double) -> String {
+/// 格式化网络速度，接收 **每秒兆字节数（MB/s）**，输出人类可读字符串（B/s ~ GB/s）。
+/// 内部还原为 B/s 后做 1000 进制转换（网络单位传统十进制）。
+/// - Parameter speedMBs: 以 MB/s 为单位的速度值（MonitorNetwork 产出）
+func formatSpeed(_ speedMBs: Double) -> String {
     let units = ["B/s", "KB/s", "MB/s", "GB/s"]
-    var value = speed * 1000 * 1000  // MB/s → B/s
+    var value = speedMBs * 1000 * 1000  // MB/s → B/s
     var unitIndex = 0
     while value >= 1000 && unitIndex < units.count - 1 {
         value /= 1000

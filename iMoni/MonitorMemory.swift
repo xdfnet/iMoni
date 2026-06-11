@@ -12,7 +12,7 @@ protocol MonitorMemoryDelegate: AnyObject {
 class MonitorMemory {
     weak var delegate: MonitorMemoryDelegate?
 
-    private var sourceTimer: DispatchSourceTimer?
+    private let timer = TimerHelper()
     private var isRunning = false
     private let queue = DispatchQueue(label: "com.imoni.memory", qos: .utility)
     private var interval: TimeInterval
@@ -23,39 +23,20 @@ class MonitorMemory {
         self.totalMemory = getTotalMemory()
     }
 
-    deinit { stopTimer() }
-
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
         if totalMemory == 0 { totalMemory = getTotalMemory() }
         isRunning = true
-        startTimer()
+        timer.start(queue: queue, interval: interval) { [weak self] in self?.update() }
         queue.async { [weak self] in self?.update() }
     }
 
     func stopMonitoring() {
         isRunning = false
-        stopTimer()
+        timer.stop()
     }
 
     func cleanup() { stopMonitoring() }
-
-    // MARK: - Timer (DispatchSource)
-
-    private func startTimer() {
-        stopTimer()
-        let t = DispatchSource.makeTimerSource(queue: queue)
-        let ms = Int(interval * 1000)
-        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
-        t.setEventHandler { [weak self] in self?.update() }
-        t.activate()
-        sourceTimer = t
-    }
-
-    private func stopTimer() {
-        sourceTimer?.cancel()
-        sourceTimer = nil
-    }
 
     // MARK: - Data
 
@@ -78,7 +59,6 @@ class MonitorMemory {
         }
     }
 
-    /// 通过 host_info(HOST_BASIC_INFO) 获取物理内存总量
     private func getTotalMemory() -> UInt64 {
         var info = host_basic_info()
         var count = mach_msg_type_number_t(MemoryLayout<host_basic_info_data_t>.size / MemoryLayout<integer_t>.size)
@@ -90,8 +70,6 @@ class MonitorMemory {
         return kr == KERN_SUCCESS ? info.max_mem : 0
     }
 
-    /// 通过 host_statistics64(HOST_VM_INFO64) 获取页面统计 → 计算已用字节
-    /// 公式: used = active + inactive + speculative + wired + compressed - purgeable - external
     private func getMemoryUsage() -> (used: UInt64, free: UInt64)? {
         var stats = vm_statistics64()
         var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.size / MemoryLayout<integer_t>.size)

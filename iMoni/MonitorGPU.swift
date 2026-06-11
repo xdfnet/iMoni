@@ -13,7 +13,7 @@ protocol MonitorGPUDelegate: AnyObject {
 class MonitorGPU {
     weak var delegate: MonitorGPUDelegate?
 
-    private var sourceTimer: DispatchSourceTimer?
+    private let timer = TimerHelper()
     private var isRunning = false
     private let queue = DispatchQueue(label: "com.imoni.gpu", qos: .utility)
     private var interval: TimeInterval
@@ -22,42 +22,22 @@ class MonitorGPU {
         self.interval = interval
     }
 
-    deinit { stopMonitoring() }
-
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
         isRunning = true
-        startTimer()
+        timer.start(queue: queue, interval: interval) { [weak self] in self?.update() }
         queue.async { [weak self] in self?.update() }
     }
 
     func stopMonitoring() {
         isRunning = false
-        stopTimer()
+        timer.stop()
     }
 
     func cleanup() { stopMonitoring() }
 
-    // MARK: - Timer (DispatchSource)
-
-    private func startTimer() {
-        stopTimer()
-        let t = DispatchSource.makeTimerSource(queue: queue)
-        let ms = Int(interval * 1000)
-        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
-        t.setEventHandler { [weak self] in self?.update() }
-        t.activate()
-        sourceTimer = t
-    }
-
-    private func stopTimer() {
-        sourceTimer?.cancel()
-        sourceTimer = nil
-    }
-
     // MARK: - Data
 
-    /// 通过 IOKit IOAccelerator 读取 GPU 占用率 (Device Utilization %)
     private func update() {
         guard isRunning else { return }
         guard let usage = getGPUUsage() else {

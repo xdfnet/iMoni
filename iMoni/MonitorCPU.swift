@@ -12,12 +12,11 @@ protocol MonitorCPUDelegate: AnyObject {
 class MonitorCPU {
     weak var delegate: MonitorCPUDelegate?
 
-    private var sourceTimer: DispatchSourceTimer?
+    private let timer = TimerHelper()
     private var isRunning = false
     private let queue = DispatchQueue(label: "com.imoni.cpu", qos: .utility)
     private var interval: TimeInterval
 
-    /// 前一次的 per-core ticks 指针（由 host_processor_info 分配）
     private var prevCpuInfo: UnsafeMutablePointer<integer_t>?
     private var prevNumCpuInfo: mach_msg_type_number_t = 0
 
@@ -25,7 +24,7 @@ class MonitorCPU {
         self.interval = interval
     }
 
-    deinit { stopTimer(); freePrevCpuInfo() }
+    deinit { freePrevCpuInfo() }
 
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
@@ -33,36 +32,19 @@ class MonitorCPU {
         freePrevCpuInfo()
         prevCpuInfo = nil
         prevNumCpuInfo = 0
-        startTimer()
+        timer.start(queue: queue, interval: interval) { [weak self] in self?.update() }
         queue.async { [weak self] in self?.update() }
     }
 
     func stopMonitoring() {
         isRunning = false
-        stopTimer()
+        timer.stop()
         freePrevCpuInfo()
         prevCpuInfo = nil
         prevNumCpuInfo = 0
     }
 
     func cleanup() { stopMonitoring() }
-
-    // MARK: - Timer (DispatchSource)
-
-    private func startTimer() {
-        stopTimer()
-        let t = DispatchSource.makeTimerSource(queue: queue)
-        let ms = Int(interval * 1000)
-        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
-        t.setEventHandler { [weak self] in self?.update() }
-        t.activate()
-        sourceTimer = t
-    }
-
-    private func stopTimer() {
-        sourceTimer?.cancel()
-        sourceTimer = nil
-    }
 
     // MARK: - Data
 
@@ -86,7 +68,7 @@ class MonitorCPU {
             var totalInUse: Int32 = 0
             var total: Int32 = 0
             let cpuCount = Int(numCPUs)
-            let step = Int(CPU_STATE_MAX) // 每个核 4 个状态
+            let step = Int(CPU_STATE_MAX)
 
             for i in 0 ..< cpuCount {
                 let base = i * step
@@ -110,7 +92,6 @@ class MonitorCPU {
             }
         }
 
-        // 释放前一次数据，保存本次指针供下次差值
         freePrevCpuInfo()
         prevCpuInfo = current
         prevNumCpuInfo = numCpuInfo

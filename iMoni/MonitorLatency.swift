@@ -9,7 +9,7 @@ protocol MonitorLatencyDelegate: AnyObject {
 class MonitorLatency {
     weak var delegate: MonitorLatencyDelegate?
 
-    private var sourceTimer: DispatchSourceTimer?
+    private let timer = TimerHelper()
     private var currentEndpoint: ServiceEndpoint?
     private var currentConnection: NWConnection?
     private var currentTimeoutWorkItem: DispatchWorkItem?
@@ -21,17 +21,15 @@ class MonitorLatency {
         self.interval = interval
     }
 
-    deinit { stopMonitoring() }
-
     func startMonitoring(_ endpoint: ServiceEndpoint) {
         stopMonitoring()
         currentEndpoint = endpoint
-        startTimer()
+        timer.start(queue: queue, interval: interval, leeway: 50) { [weak self] in self?.ping() }
         queue.async { [weak self] in self?.ping() }
     }
 
     func stopMonitoring() {
-        stopTimer()
+        timer.stop()
         cleanupConnection()
         currentEndpoint = nil
         isPinging = false
@@ -41,27 +39,12 @@ class MonitorLatency {
 
     func updateInterval(_ newInterval: TimeInterval) {
         interval = newInterval
-        if sourceTimer != nil { startTimer() }
+        if timer.isActive {
+            timer.start(queue: queue, interval: interval, leeway: 50) { [weak self] in self?.ping() }
+        }
     }
 
-    // MARK: - Timer (DispatchSource)
-
-    private func startTimer() {
-        stopTimer()
-        let t = DispatchSource.makeTimerSource(queue: queue)
-        let ms = Int(interval * 1000)
-        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(50))
-        t.setEventHandler { [weak self] in self?.ping() }
-        t.activate()
-        sourceTimer = t
-    }
-
-    private func stopTimer() {
-        sourceTimer?.cancel()
-        sourceTimer = nil
-    }
-
-    // MARK: - Ping (unchanged)
+    // MARK: - Ping
 
     private func ping() {
         guard let endpoint = currentEndpoint, !isPinging else { return }
