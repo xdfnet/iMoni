@@ -12,17 +12,22 @@ protocol MonitorMemoryDelegate: AnyObject {
 class MonitorMemory {
     weak var delegate: MonitorMemoryDelegate?
 
-    private var timer: Timer?
+    private var sourceTimer: DispatchSourceTimer?
     private var isRunning = false
     private let queue = DispatchQueue(label: "com.imoni.memory", qos: .utility)
     private var interval: TimeInterval
+    private var totalMemory: UInt64 = 0
 
     init(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
+        self.totalMemory = getTotalMemory()
     }
+
+    deinit { stopTimer() }
 
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
+        if totalMemory == 0 { totalMemory = getTotalMemory() }
         isRunning = true
         startTimer()
         queue.async { [weak self] in self?.update() }
@@ -33,26 +38,30 @@ class MonitorMemory {
         stopTimer()
     }
 
-    func cleanup() {
-        stopMonitoring()
-    }
+    func cleanup() { stopMonitoring() }
+
+    // MARK: - Timer (DispatchSource)
 
     private func startTimer() {
         stopTimer()
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            self?.queue.async { self?.update() }
-        }
-        timer?.tolerance = min(interval * 0.1, 0.1)
+        let t = DispatchSource.makeTimerSource(queue: queue)
+        let ms = Int(interval * 1000)
+        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
+        t.setEventHandler { [weak self] in self?.update() }
+        t.activate()
+        sourceTimer = t
     }
 
     private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+        sourceTimer?.cancel()
+        sourceTimer = nil
     }
+
+    // MARK: - Data
 
     private func update() {
         guard isRunning else { return }
-        guard let (usedGB, percent) = getMemoryUsage() else {
+        guard let (usedBytes, _) = getMemoryUsage() else {
             mainQueue { [weak self] in
                 guard let self else { return }
                 self.delegate?.memoryMonitorDidFail(self)
@@ -60,41 +69,49 @@ class MonitorMemory {
             return
         }
 
+        let usedGB = Double(usedBytes) / (1024.0 * 1024.0 * 1024.0)
+        let percent = totalMemory > 0 ? Double(usedBytes) / Double(totalMemory) * 100.0 : 0
+
         mainQueue { [weak self] in
             guard let self else { return }
             self.delegate?.memoryMonitor(self, didUpdateMemoryUsed: usedGB, percent: percent)
         }
     }
 
-    /// 获取已使用的物理内存（GB）和百分比
-    private func getMemoryUsage() -> (usedGB: Double, percent: Double)? {
-        let host = mach_host_self()
-
-        var info = vm_statistics_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics_data_t>.size / MemoryLayout<integer_t>.size)
-
+    /// 通过 host_info(HOST_BASIC_INFO) 获取物理内存总量
+    private func getTotalMemory() -> UInt64 {
+        var info = host_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<host_basic_info_data_t>.size / MemoryLayout<integer_t>.size)
         let kr = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                host_statistics(host, HOST_VM_INFO, $0, &count)
+                host_info(mach_host_self(), HOST_BASIC_INFO, $0, &count)
+            }
+        }
+        return kr == KERN_SUCCESS ? info.max_mem : 0
+    }
+
+    /// 通过 host_statistics64(HOST_VM_INFO64) 获取页面统计 → 计算已用字节
+    /// 公式: used = active + inactive + speculative + wired + compressed - purgeable - external
+    private func getMemoryUsage() -> (used: UInt64, free: UInt64)? {
+        var stats = vm_statistics64()
+        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.size / MemoryLayout<integer_t>.size)
+        let kr = withUnsafeMutablePointer(to: &stats) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
             }
         }
         guard kr == KERN_SUCCESS else { return nil }
 
-        let pageSize = Int(getpagesize())
+        let page = UInt64(vm_page_size)
+        let active     = UInt64(stats.active_count) * page
+        let inactive   = UInt64(stats.inactive_count) * page
+        let speculative = UInt64(stats.speculative_count) * page
+        let wired      = UInt64(stats.wire_count) * page
+        let compressed = UInt64(stats.compressor_page_count) * page
+        let purgeable  = UInt64(stats.purgeable_count) * page
+        let external   = UInt64(stats.external_page_count) * page
 
-        // total physical memory (bytes)
-        let total = ProcessInfo.processInfo.physicalMemory
-
-        // used = total - (free + inactive)
-        let freePages = Int(info.free_count + info.inactive_count)
-        let freeBytes = UInt64(freePages * pageSize)
-
-        guard total > freeBytes else { return nil }
-
-        let usedBytes = total - freeBytes
-        let usedGB = Double(usedBytes) / (1000.0 * 1000.0 * 1000.0)
-        let percent = Double(usedBytes) / Double(total) * 100.0
-
-        return (usedGB, percent)
+        let used = active + inactive + speculative + wired + compressed - purgeable - external
+        return (used, totalMemory - used)
     }
 }

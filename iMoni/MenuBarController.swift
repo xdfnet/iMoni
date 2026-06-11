@@ -180,9 +180,10 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             connected = connectionStatus == .connected
         case .memoryUsage:
             let used = Int(round(currentMemoryUsed))
-            let pct = Int(round(currentMemoryPercent))
-            top = "MEM \(used) GB"
-            bottom = "RAM \(pct)%"
+            let pct = currentMemoryPercent
+            let total = pct > 0 ? Int(round(currentMemoryUsed / (pct / 100))) : 0
+            top = "\(used) / \(total) GB"
+            bottom = "PCT \(Int(round(pct)))%"
             connected = memoryAvailable
         case .systemUsage:
             let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
@@ -222,8 +223,9 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             return "iMoni\n↑ \(currentUploadSpeed)\n↓ \(currentDownloadSpeed)\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
         case .memoryUsage:
             let used = Int(round(currentMemoryUsed))
-            let pct = Int(round(currentMemoryPercent))
-            return "iMoni\nMemory: \(used) GB (\(pct)%)\nStatus: \(memoryAvailable ? "OK" : "Failed")"
+            let pctVal = currentMemoryPercent
+            let total = pctVal > 0 ? Int(round(currentMemoryUsed / (pctVal / 100))) : 0
+            return "iMoni\n\(used) / \(total) GB (\(Int(round(pctVal)))%)\nStatus: \(memoryAvailable ? "OK" : "Failed")"
         case .systemUsage:
             let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
             let gpuStr = gpuAvailable ? "\(Int(round(currentGPUPercent)))%" : "--"

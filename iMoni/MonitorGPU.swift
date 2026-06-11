@@ -13,7 +13,7 @@ protocol MonitorGPUDelegate: AnyObject {
 class MonitorGPU {
     weak var delegate: MonitorGPUDelegate?
 
-    private var timer: Timer?
+    private var sourceTimer: DispatchSourceTimer?
     private var isRunning = false
     private let queue = DispatchQueue(label: "com.imoni.gpu", qos: .utility)
     private var interval: TimeInterval
@@ -21,6 +21,8 @@ class MonitorGPU {
     init(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
     }
+
+    deinit { stopMonitoring() }
 
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
@@ -34,23 +36,28 @@ class MonitorGPU {
         stopTimer()
     }
 
-    func cleanup() {
-        stopMonitoring()
-    }
+    func cleanup() { stopMonitoring() }
+
+    // MARK: - Timer (DispatchSource)
 
     private func startTimer() {
         stopTimer()
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            self?.queue.async { self?.update() }
-        }
-        timer?.tolerance = min(interval * 0.1, 0.1)
+        let t = DispatchSource.makeTimerSource(queue: queue)
+        let ms = Int(interval * 1000)
+        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
+        t.setEventHandler { [weak self] in self?.update() }
+        t.activate()
+        sourceTimer = t
     }
 
     private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+        sourceTimer?.cancel()
+        sourceTimer = nil
     }
 
+    // MARK: - Data
+
+    /// 通过 IOKit IOAccelerator 读取 GPU 占用率 (Device Utilization %)
     private func update() {
         guard isRunning else { return }
         guard let usage = getGPUUsage() else {
@@ -67,8 +74,6 @@ class MonitorGPU {
         }
     }
 
-    /// 通过 IOKit IOAccelerator 读取 GPU 占用率
-    /// 实际 key 名: Device Utilization %, Renderer Utilization %, Tiler Utilization %
     private func getGPUUsage() -> Double? {
         let matching = IOServiceMatching("IOAccelerator")
         var iterator: io_iterator_t = 0
@@ -86,7 +91,6 @@ class MonitorGPU {
                let props = properties?.takeRetainedValue() as? [String: Any],
                let stats = props["PerformanceStatistics"] as? [String: Any] {
 
-                // Device Utilization % 是最综合的 GPU 占用指标
                 if let usage = stats["Device Utilization %"] as? Double {
                     totalUsage += usage; count += 1
                 }

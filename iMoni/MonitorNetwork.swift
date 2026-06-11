@@ -8,7 +8,7 @@ protocol MonitorNetworkDelegate: AnyObject {
 class MonitorNetwork {
     weak var delegate: MonitorNetworkDelegate?
 
-    private var timer: Timer?
+    private var sourceTimer: DispatchSourceTimer?
     private var isRunning = false
     private let queue = DispatchQueue(label: MonitorConstants.networkQueueLabel, qos: .utility)
     private var interval: TimeInterval
@@ -26,6 +26,8 @@ class MonitorNetwork {
     init(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
     }
+
+    deinit { stopMonitoring() }
 
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         guard let initial = totalBytes() else {
@@ -52,27 +54,31 @@ class MonitorNetwork {
         lastUpdateTime = 0
     }
 
-    func cleanup() {
-        stopMonitoring()
-    }
+    func cleanup() { stopMonitoring() }
 
     func updateInterval(_ newInterval: TimeInterval) {
         interval = newInterval
-        if timer != nil { startTimer() }
+        if sourceTimer != nil { startTimer() }
     }
+
+    // MARK: - Timer (DispatchSource)
 
     private func startTimer() {
         stopTimer()
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            self?.queue.async { self?.update() }
-        }
-        timer?.tolerance = min(interval * 0.1, 0.1)
+        let t = DispatchSource.makeTimerSource(queue: queue)
+        let ms = Int(interval * 1000)
+        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
+        t.setEventHandler { [weak self] in self?.update() }
+        t.activate()
+        sourceTimer = t
     }
 
     private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+        sourceTimer?.cancel()
+        sourceTimer = nil
     }
+
+    // MARK: - Data (unchanged)
 
     private func update() {
         guard isRunning else { return }

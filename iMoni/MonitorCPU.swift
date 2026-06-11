@@ -12,22 +12,27 @@ protocol MonitorCPUDelegate: AnyObject {
 class MonitorCPU {
     weak var delegate: MonitorCPUDelegate?
 
-    private var timer: Timer?
+    private var sourceTimer: DispatchSourceTimer?
     private var isRunning = false
     private let queue = DispatchQueue(label: "com.imoni.cpu", qos: .utility)
     private var interval: TimeInterval
-    private var previousLoad: host_cpu_load_info_data_t?
-    private var previousTime: CFAbsoluteTime?
+
+    /// 前一次的 per-core ticks 指针（由 host_processor_info 分配）
+    private var prevCpuInfo: UnsafeMutablePointer<integer_t>?
+    private var prevNumCpuInfo: mach_msg_type_number_t = 0
 
     init(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
     }
 
+    deinit { stopTimer(); freePrevCpuInfo() }
+
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
         isRunning = true
-        previousLoad = nil
-        previousTime = nil
+        freePrevCpuInfo()
+        prevCpuInfo = nil
+        prevNumCpuInfo = 0
         startTimer()
         queue.async { [weak self] in self?.update() }
     }
@@ -35,62 +40,85 @@ class MonitorCPU {
     func stopMonitoring() {
         isRunning = false
         stopTimer()
+        freePrevCpuInfo()
+        prevCpuInfo = nil
+        prevNumCpuInfo = 0
     }
 
-    func cleanup() {
-        stopMonitoring()
-    }
+    func cleanup() { stopMonitoring() }
+
+    // MARK: - Timer (DispatchSource)
 
     private func startTimer() {
         stopTimer()
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            self?.queue.async { self?.update() }
-        }
-        timer?.tolerance = min(interval * 0.1, 0.1)
+        let t = DispatchSource.makeTimerSource(queue: queue)
+        let ms = Int(interval * 1000)
+        t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
+        t.setEventHandler { [weak self] in self?.update() }
+        t.activate()
+        sourceTimer = t
     }
 
     private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+        sourceTimer?.cancel()
+        sourceTimer = nil
     }
+
+    // MARK: - Data
 
     private func update() {
         guard isRunning else { return }
-        let current = getCPULoad()
-        let now = CFAbsoluteTimeGetCurrent()
 
-        if let prev = previousLoad, let prevTime = previousTime, now - prevTime > 0.01 {
-            let userDelta = Double(current.cpu_ticks.0) - Double(prev.cpu_ticks.0)
-            let systemDelta = Double(current.cpu_ticks.1) - Double(prev.cpu_ticks.1)
-            let idleDelta = Double(current.cpu_ticks.2) - Double(prev.cpu_ticks.2)
-            let niceDelta = Double(current.cpu_ticks.3) - Double(prev.cpu_ticks.3)
+        var numCPUs: natural_t = 0
+        var cpuInfo: processor_info_array_t? = nil
+        var numCpuInfo: mach_msg_type_number_t = 0
 
-            let totalDelta = userDelta + systemDelta + idleDelta + niceDelta
-            if totalDelta > 0 {
-                let usedDelta = userDelta + systemDelta + niceDelta
-                let percent = usedDelta / totalDelta * 100.0
+        let kr = host_processor_info(
+            mach_host_self(),
+            PROCESSOR_CPU_LOAD_INFO,
+            &numCPUs,
+            &cpuInfo,
+            &numCpuInfo
+        )
+        guard kr == KERN_SUCCESS, let current = cpuInfo else { return }
 
+        if let prev = prevCpuInfo, prevNumCpuInfo > 0 {
+            var totalInUse: Int32 = 0
+            var total: Int32 = 0
+            let cpuCount = Int(numCPUs)
+            let step = Int(CPU_STATE_MAX) // 每个核 4 个状态
+
+            for i in 0 ..< cpuCount {
+                let base = i * step
+                let user   = current[base + Int(CPU_STATE_USER)]   - prev[base + Int(CPU_STATE_USER)]
+                let system = current[base + Int(CPU_STATE_SYSTEM)] - prev[base + Int(CPU_STATE_SYSTEM)]
+                let idle   = current[base + Int(CPU_STATE_IDLE)]   - prev[base + Int(CPU_STATE_IDLE)]
+                let nice   = current[base + Int(CPU_STATE_NICE)]   - prev[base + Int(CPU_STATE_NICE)]
+
+                let inUse = user + system + nice
+                let totalTicks = inUse + idle
+                totalInUse += inUse
+                total += totalTicks
+            }
+
+            if total > 0 {
+                let percent = Double(totalInUse) / Double(total) * 100.0
                 mainQueue { [weak self] in
                     guard let self else { return }
                     self.delegate?.cpuMonitor(self, didUpdateCPUUsage: percent)
                 }
             }
-        } else {
-            // First sample — just store it, no data to report yet
         }
 
-        previousLoad = current
-        previousTime = now
+        // 释放前一次数据，保存本次指针供下次差值
+        freePrevCpuInfo()
+        prevCpuInfo = current
+        prevNumCpuInfo = numCpuInfo
     }
 
-    private func getCPULoad() -> host_cpu_load_info_data_t {
-        var info = host_cpu_load_info_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info_data_t>.size / MemoryLayout<integer_t>.size)
-        let _ = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, $0, &count)
-            }
-        }
-        return info
+    private func freePrevCpuInfo() {
+        guard let p = prevCpuInfo else { return }
+        let size = vm_size_t(prevNumCpuInfo) * vm_size_t(MemoryLayout<integer_t>.stride)
+        vm_deallocate(mach_task_self_, vm_address_t(UInt(bitPattern: p)), size)
     }
 }
