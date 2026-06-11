@@ -4,26 +4,57 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.3.2] - 2026-06-11
+
+### 🔧 统一采集方式
+
+对齐 [Stats](https://github.com/exelban/stats) 的数据采集方式：
+
+- **CPU**：改用 `host_processor_info(PROCESSOR_CPU_LOAD_INFO)` 逐核采集 ticks，汇总算总使用率
+- **内存**：改用 `host_statistics64(HOST_VM_INFO64)` + `host_info(HOST_BASIC_INFO)`，公式 `active + inactive + speculative + wired + compressed - purgeable - external`
+- **定时器**：全部从 `Timer`（RunLoop）迁移至 `DispatchSourceTimer`（dispatch queue）
+- **修复**：内存单位混用 bug（十进制 GB ↔ 二进制 GB 不一致导致总量显示 52 而不是 48）
+
+### 文件变更
+
+- 新增：`MonitorCPU.swift`, `MonitorGPU.swift`, `MonitorMemory.swift`
+- 修改：全部 5 个监控器重写定时器逻辑
+
+## [1.3.1] - 2026-06-10
+
+### 🚀 新增功能
+
+- **Memory 模式**：物理内存占用显示 `RAM x GB / PCT x%`
+- **CPU/GPU 模式**：实时 CPU + GPU 使用率百分比
+- 菜单栏 View 菜单从 2 项扩展至 4 项
+- 统一英文 UI 标签，移除版本号显示
+
+### 技术实现
+
+- 内存：`host_statistics(HOST_VM_INFO)` + `getpagesize()` + `ProcessInfo.physicalMemory`
+- CPU：`host_statistics(HOST_CPU_LOAD_INFO)` 两次 tick 差值
+- GPU：IOKit `IOAccelerator` 读取 `Device Utilization %`
+
+## [1.3.0] - 2026-06-10
+
+### 🔨 全面重构
+
+- 从头重写项目，文件数从 10 个缩减至 5 个（后扩展至 8 个）
+- 删除 BaseMonitor / ServiceManager / ConfigurationManager 等冗余抽象层
+- 删除 AI 服务列表（从 7 个缩减为 DeepSeek + OpenAI 双服务）
+- 删除全部测试文件、文档目录
+
+### ✨ 新功能
+
+- **Service 模式**：双服务（DeepSeek / OpenAI）TCP 建连时间显示
+- **Network 模式**：上行↑ / 下行↓ 实时网络速率
+- 原生 NSMenu 菜单栏，View 菜单切换显示模式
+- 睡眠/唤醒事件监听
+- UserDefaults 配置持久化
+
 ## [1.28] - 2026-05-02
 
-### 🔨 极致精简
-
-项目从"大而全"彻底转向"小工具"路线，大幅削减冗余代码和文件。
-
-**代码精简：**
-- 源文件从 10 个 → 5 个（App, Core, MenuBarController, MonitorLatency, MonitorNetwork）
-- 源码行数从 ~1150 行 → ~550 行（减少 52%）
-- 删除 BaseMonitor 抽象基类，定时器逻辑内联到具体监控类
-- 删除 ServiceManager 单例，服务列表改为平面常量
-- 删除 ConfigurationManager 单例（147 行 → 15 行 UserDefaults 扩展）
-- 删除 Utilities.swift 中 7 个未使用的工具函数
-- 删除速度滑动平均、配置导入导出、通知设置等未使用功能
-
-**文件清理：**
-- 删除 Docs/ 目录（7 个文档文件，~105KB）
-- 删除 Scripts/ 目录（code_quality_check.sh）
-- 删除 iMoniTests/ 目录（8 个测试文件，~650 行）
-- 更新 README.md 反映新结构
+_(历史版本，详情见 [GitHub Releases](https://github.com/xdfnet/iMoni/releases))_
 
 ## [1.19] - 2025-11-19
 
