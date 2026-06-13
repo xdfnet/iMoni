@@ -120,9 +120,10 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
         let viewItem = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
         let viewSub = NSMenu()
-        for mode in DisplayMode.allCases {
-            let item = NSMenuItem(title: mode.rawValue, action: #selector(selectMode(_:)), keyEquivalent: "")
+        for (i, mode) in DisplayMode.allCases.enumerated() {
+            let item = NSMenuItem(title: mode.rawValue, action: #selector(selectMode(_:)), keyEquivalent: "\(i + 1)")
             item.target = self
+            item.keyEquivalentModifierMask = .command
             item.representedObject = mode.rawValue
             item.state = mode == currentDisplayMode ? .on : .off
             viewSub.addItem(item)
