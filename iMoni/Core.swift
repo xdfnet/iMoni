@@ -30,10 +30,10 @@ enum ConnectionStatus {
 }
 
 enum DisplayMode: String, CaseIterable {
-    case serviceLatency = "Service"
-    case networkSpeed = "Network"
-    case memoryUsage = "Memory"
     case systemUsage = "CPU/GPU"
+    case memoryUsage = "Memory"
+    case networkSpeed = "Network"
+    case serviceLatency = "Service"
 }
 
 enum MonitorConstants {
