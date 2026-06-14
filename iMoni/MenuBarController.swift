@@ -22,7 +22,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private var cpuAvailable = false
     private var gpuAvailable = false
     private var connectionStatus: ConnectionStatus = .disconnected
-    private var currentDisplayMode: DisplayMode = .serviceLatency
+    private var currentDisplayMode: DisplayMode = .latency
 
     override init() {
         super.init()
@@ -82,7 +82,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     private func applySettings() {
         switch currentDisplayMode {
-        case .serviceLatency:
+        case .latency:
             networkMonitor.stopMonitoring()
             memoryMonitor.stopMonitoring()
             cpuMonitor.stopMonitoring()
@@ -118,20 +118,14 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        let viewItem = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
-        let viewSub = NSMenu()
         for (i, mode) in DisplayMode.allCases.enumerated() {
             let item = NSMenuItem(title: mode.rawValue, action: #selector(selectMode(_:)), keyEquivalent: "\(i + 1)")
             item.target = self
             item.keyEquivalentModifierMask = .command
             item.representedObject = mode.rawValue
             item.state = mode == currentDisplayMode ? .on : .off
-            viewSub.addItem(item)
+            menu.addItem(item)
         }
-        viewItem.submenu = viewSub
-        menu.addItem(viewItem)
-        menu.addItem(.separator())
-
         menu.addItem(.separator())
 
         let quit = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
@@ -170,7 +164,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         let connected: Bool
 
         switch currentDisplayMode {
-        case .serviceLatency:
+        case .latency:
             top = "OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")"
             bottom = "DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")"
             connected = deepSeekConnected || openAIConnected
@@ -218,7 +212,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     private var tooltipText: String {
         switch currentDisplayMode {
-        case .serviceLatency:
+        case .latency:
             return "iMoni\nOpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")\nDeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")\nStatus: \(deepSeekConnected || openAIConnected ? "Connected" : "Disconnected")"
         case .networkSpeed:
             return "iMoni\n↑ \(currentUploadSpeed)\n↓ \(currentDownloadSpeed)\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
@@ -244,7 +238,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             openAILatency = latency
             openAIConnected = true
         }
-        if currentDisplayMode == .serviceLatency { updateDisplay() }
+        if currentDisplayMode == .latency { updateDisplay() }
     }
 
     func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint) {
@@ -255,7 +249,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             openAILatency = 0
             openAIConnected = false
         }
-        if currentDisplayMode == .serviceLatency { updateDisplay() }
+        if currentDisplayMode == .latency { updateDisplay() }
     }
 
     // MARK: - MonitorNetworkDelegate

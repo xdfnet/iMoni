@@ -33,7 +33,7 @@ enum DisplayMode: String, CaseIterable {
     case systemUsage = "CPU/GPU"
     case memoryUsage = "Memory"
     case networkSpeed = "Network"
-    case serviceLatency = "Service"
+    case latency = "Latency"
 }
 
 enum MonitorConstants {
@@ -50,7 +50,7 @@ extension UserDefaults {
     var displayMode: DisplayMode {
         get {
             guard let raw = string(forKey: "displayMode"),
-                  let mode = DisplayMode(rawValue: raw) else { return .serviceLatency }
+                  let mode = DisplayMode(rawValue: raw) else { return .latency }
             return mode
         }
         set { set(newValue.rawValue, forKey: "displayMode") }
