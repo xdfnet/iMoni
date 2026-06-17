@@ -178,7 +178,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
                 let used = Int(round(currentMemoryUsed))
                 let pct = currentMemoryPercent
                 let total = pct > 0 ? Int(round(currentMemoryUsed / (pct / 100))) : 0
-                top = "\(used) / \(total) GB"
+                top = "\(used)/\(total) GB"
                 bottom = "PCT \(Int(round(pct)))%"
             } else {
                 top = "--"
@@ -186,8 +186,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             }
             connected = memoryAvailable
         case .systemUsage:
-            let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
-            let gpuStr = gpuAvailable ? "\(Int(round(currentGPUPercent)))%" : "--"
+            let cpuStr = cpuAvailable ? String(format: "%3d%%", Int(round(currentCPUPercent))) : " --%"
+            let gpuStr = gpuAvailable ? String(format: "%3d%%", Int(round(currentGPUPercent))) : " --%"
             top = "CPU \(cpuStr)"
             bottom = "GPU \(gpuStr)"
             connected = cpuAvailable || gpuAvailable
@@ -198,7 +198,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     private func renderImage(top: String, bottom: String, connected: Bool, mode: DisplayMode) -> NSImage {
-        let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
+        let font = NSFont.monospacedSystemFont(ofSize: 9, weight: .light)
         let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor]
 
         let topSize = (top as NSString).size(withAttributes: attrs)
@@ -224,7 +224,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             let used = Int(round(currentMemoryUsed))
             let pctVal = currentMemoryPercent
             let total = pctVal > 0 ? Int(round(currentMemoryUsed / (pctVal / 100))) : 0
-            return "iMoni\n\(used) / \(total) GB (\(Int(round(pctVal)))%)\nStatus: \(memoryAvailable ? "OK" : "Failed")"
+            return "iMoni\n\(used)/\(total) GB (\(Int(round(pctVal)))%)\nStatus: \(memoryAvailable ? "OK" : "Failed")"
         case .systemUsage:
             let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
             let gpuStr = gpuAvailable ? "\(Int(round(currentGPUPercent)))%" : "--"
