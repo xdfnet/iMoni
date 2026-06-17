@@ -170,8 +170,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             connected = deepSeekConnected || openAIConnected
             connectionStatus = connected ? .connected : .disconnected
         case .networkSpeed:
-            top = "↑\(currentUploadSpeed)"
-            bottom = "↓\(currentDownloadSpeed)"
+            top = "\(currentUploadSpeed)"
+            bottom = "\(currentDownloadSpeed)"
             connected = connectionStatus == .connected
         case .memoryUsage:
             let used = Int(round(currentMemoryUsed))
@@ -188,11 +188,11 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             connected = cpuAvailable || gpuAvailable
         }
 
-        statusBarItem?.button?.image = renderImage(top: top, bottom: bottom, connected: connected)
+        statusBarItem?.button?.image = renderImage(top: top, bottom: bottom, connected: connected, mode: currentDisplayMode)
         statusBarItem?.button?.toolTip = tooltipText
     }
 
-    private func renderImage(top: String, bottom: String, connected: Bool) -> NSImage {
+    private func renderImage(top: String, bottom: String, connected: Bool, mode: DisplayMode) -> NSImage {
         let color = connected ? NSColor.labelColor : NSColor.systemRed
         let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
         let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
@@ -204,8 +204,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
         return NSImage(size: NSSize(width: width, height: height), flipped: false) { _ in
             let halfH = height / 2
-            (top as NSString).draw(at: NSPoint(x: 2, y: halfH + (halfH - topSize.height) / 2), withAttributes: attrs)
-            (bottom as NSString).draw(at: NSPoint(x: 2, y: (halfH - bottomSize.height) / 2), withAttributes: attrs)
+            (top as NSString).draw(at: NSPoint(x: width - topSize.width - 2, y: halfH + (halfH - topSize.height) / 2), withAttributes: attrs)
+            (bottom as NSString).draw(at: NSPoint(x: width - bottomSize.width - 2, y: (halfH - bottomSize.height) / 2), withAttributes: attrs)
             return true
         }
     }
