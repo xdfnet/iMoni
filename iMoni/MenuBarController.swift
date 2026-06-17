@@ -174,11 +174,16 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             bottom = "\(currentDownloadSpeed)"
             connected = connectionStatus == .connected
         case .memoryUsage:
-            let used = Int(round(currentMemoryUsed))
-            let pct = currentMemoryPercent
-            let total = pct > 0 ? Int(round(currentMemoryUsed / (pct / 100))) : 0
-            top = "\(used) / \(total) GB"
-            bottom = "PCT \(Int(round(pct)))%"
+            if memoryAvailable {
+                let used = Int(round(currentMemoryUsed))
+                let pct = currentMemoryPercent
+                let total = pct > 0 ? Int(round(currentMemoryUsed / (pct / 100))) : 0
+                top = "\(used) / \(total) GB"
+                bottom = "PCT \(Int(round(pct)))%"
+            } else {
+                top = "--"
+                bottom = "--"
+            }
             connected = memoryAvailable
         case .systemUsage:
             let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
@@ -193,9 +198,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     private func renderImage(top: String, bottom: String, connected: Bool, mode: DisplayMode) -> NSImage {
-        let color = connected ? NSColor.labelColor : NSColor.systemRed
         let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor]
 
         let topSize = (top as NSString).size(withAttributes: attrs)
         let bottomSize = (bottom as NSString).size(withAttributes: attrs)
