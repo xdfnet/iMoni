@@ -34,6 +34,7 @@ help:
 	@echo "$(G)构建:$(N)"
 	@echo "  $(Y)make debug$(N)          - Debug 构建并启动"
 	@echo "  $(Y)make release$(N)         - Release 构建 + 安装到 /Applications"
+	@echo "  $(Y)make install$(N)         - 安装已构建的 Release 到 /Applications（自动构建）"
 	@echo "  $(Y)make package$(N)         - 打包已安装的版本为 zip"
 	@echo ""
 	@echo "$(G)版本管理:$(N)"
@@ -81,9 +82,14 @@ debug:
 	else echo "$(R)找不到 App$(N)"; exit 1; fi
 
 release:
-	@echo "$(B)Release 构建并安装...$(N)"
+	@echo "$(B)Release 构建...$(N)"
+	@$(MAKE) build-release
+	@$(MAKE) install
+	@echo "$(APP_PATH)" > /dev/null
+
+build-release:
+	@echo "$(B)Release 构建...$(N)"
 	@pkill -f "$(PROJECT_NAME)" 2>/dev/null || true
-	@rm -rf "$(INSTALL_DIR)/$(PROJECT_NAME).app" 2>/dev/null || true
 	@rm -rf $(BUILD_DIR)
 	@rm -rf ~/Library/Developer/Xcode/DerivedData/$(PROJECT_NAME)-*
 	@xcodebuild \
@@ -95,12 +101,24 @@ release:
 		MARKETING_VERSION=$(version) \
 		CURRENT_PROJECT_VERSION=$(build_number) \
 		build
+
+install:
+	@echo "$(B)安装到 /Applications...$(N)"
+	@pkill -f "$(PROJECT_NAME)" 2>/dev/null || true
+	@rm -rf "$(INSTALL_DIR)/$(PROJECT_NAME).app" 2>/dev/null || true
 	@APP=$$(find $(BUILD_DIR) -name "$(PROJECT_NAME).app" -type d | head -1); \
 	if [ -n "$$APP" ]; then \
 		cp -R "$$APP" $(INSTALL_DIR)/; \
 		echo "$(G)已安装: $(INSTALL_DIR)/$(PROJECT_NAME).app$(N)"; \
-	else echo "$(R)找不到 App$(N)"; exit 1; fi
-	@echo "$(APP_PATH)" > /dev/null
+	else \
+		echo "$(Y)未构建，先构建 Release...$(N)"; \
+		$(MAKE) build-release; \
+		APP=$$(find $(BUILD_DIR) -name "$(PROJECT_NAME).app" -type d | head -1); \
+		if [ -n "$$APP" ]; then \
+			cp -R "$$APP" $(INSTALL_DIR)/; \
+			echo "$(G)已安装: $(INSTALL_DIR)/$(PROJECT_NAME).app$(N)"; \
+		else echo "$(R)构建失败$(N)"; exit 1; fi \
+	fi
 
 package:
 	@echo "$(B)打包 zip...$(N)"

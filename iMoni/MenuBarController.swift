@@ -188,8 +188,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         case .systemUsage:
             let cpuStr = cpuAvailable ? String(format: "%3d%%", Int(round(currentCPUPercent))) : " --%"
             let gpuStr = gpuAvailable ? String(format: "%3d%%", Int(round(currentGPUPercent))) : " --%"
-            top = "CPU \(cpuStr)"
-            bottom = "GPU \(gpuStr)"
+            top = "CPU\(cpuStr)"
+            bottom = "GPU\(gpuStr)"
             connected = cpuAvailable || gpuAvailable
         }
 
