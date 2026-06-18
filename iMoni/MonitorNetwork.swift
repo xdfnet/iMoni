@@ -79,9 +79,14 @@ class MonitorNetwork {
 
         if current.1 >= lastBytesReceived {
             diffReceived = current.1 - lastBytesReceived
+        } else {
+            // 32-bit 计数器溢出（ifi_ibytes 是 u_int32_t，约 4GB 归零）
+            diffReceived = current.1 + (UInt64(UInt32.max) + 1) - lastBytesReceived
         }
         if current.0 >= lastBytesSent {
             diffSent = current.0 - lastBytesSent
+        } else {
+            diffSent = current.0 + (UInt64(UInt32.max) + 1) - lastBytesSent
         }
 
         lastBytesReceived = current.1
