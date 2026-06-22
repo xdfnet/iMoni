@@ -1,17 +1,11 @@
 import Cocoa
 
-class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegate, MonitorMemoryDelegate, MonitorCPUDelegate, MonitorGPUDelegate, NSMenuDelegate {
+class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate, MonitorCPUDelegate, MonitorGPUDelegate, NSMenuDelegate {
     private var statusBarItem: NSStatusItem?
-    private let latencyMonitorDeepSeek = MonitorLatency()
-    private let latencyMonitorOpenAI = MonitorLatency()
     private let networkMonitor = MonitorNetwork()
     private let memoryMonitor = MonitorMemory()
     private let cpuMonitor = MonitorCPU()
     private let gpuMonitor = MonitorGPU()
-    private var deepSeekLatency: TimeInterval = 0
-    private var openAILatency: TimeInterval = 0
-    private var deepSeekConnected = false
-    private var openAIConnected = false
     private var currentUploadSpeed: Double = 0
     private var currentDownloadSpeed: Double = 0
     private var networkAvailable = false
@@ -22,8 +16,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private var currentGPUPercent: Double = 0
     private var cpuAvailable = false
     private var gpuAvailable = false
-    private var connectionStatus: ConnectionStatus = .disconnected
-    private var currentDisplayMode: DisplayMode = .latency
+    private var currentDisplayMode: DisplayMode = .networkSpeed
 
     override init() {
         super.init()
@@ -35,8 +28,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     func cleanup() {
-        latencyMonitorDeepSeek.stopMonitoring()
-        latencyMonitorOpenAI.stopMonitoring()
         networkMonitor.stopMonitoring()
         memoryMonitor.stopMonitoring()
         cpuMonitor.stopMonitoring()
@@ -45,8 +36,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     func suspend() {
-        latencyMonitorDeepSeek.stopMonitoring()
-        latencyMonitorOpenAI.stopMonitoring()
         networkMonitor.stopMonitoring()
         memoryMonitor.stopMonitoring()
         cpuMonitor.stopMonitoring()
@@ -73,8 +62,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     }
 
     private func setupMonitors() {
-        latencyMonitorDeepSeek.delegate = self
-        latencyMonitorOpenAI.delegate = self
         networkMonitor.delegate = self
         memoryMonitor.delegate = self
         cpuMonitor.delegate = self
@@ -83,30 +70,17 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     private func applySettings() {
         switch currentDisplayMode {
-        case .latency:
-            networkMonitor.stopMonitoring()
-            memoryMonitor.stopMonitoring()
-            cpuMonitor.stopMonitoring()
-            gpuMonitor.stopMonitoring()
-            latencyMonitorDeepSeek.startMonitoring(services[0])
-            latencyMonitorOpenAI.startMonitoring(services[1])
         case .networkSpeed:
-            latencyMonitorDeepSeek.stopMonitoring()
-            latencyMonitorOpenAI.stopMonitoring()
             memoryMonitor.stopMonitoring()
             cpuMonitor.stopMonitoring()
             gpuMonitor.stopMonitoring()
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .memoryUsage:
-            latencyMonitorDeepSeek.stopMonitoring()
-            latencyMonitorOpenAI.stopMonitoring()
             networkMonitor.stopMonitoring()
             cpuMonitor.stopMonitoring()
             gpuMonitor.stopMonitoring()
             memoryMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .systemUsage:
-            latencyMonitorDeepSeek.stopMonitoring()
-            latencyMonitorOpenAI.stopMonitoring()
             networkMonitor.stopMonitoring()
             memoryMonitor.stopMonitoring()
             cpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
@@ -164,10 +138,6 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         let bottom: String
 
         switch currentDisplayMode {
-        case .latency:
-            top = openAIConnected ? "OpenAI: \(formatLatency(openAILatency))" : ""
-            bottom = deepSeekConnected ? "DeepSeek: \(formatLatency(deepSeekLatency))" : ""
-            connectionStatus = (deepSeekConnected || openAIConnected) ? .connected : .disconnected
         case .networkSpeed:
             top = networkAvailable ? formatSpeed(currentUploadSpeed) : ""
             bottom = networkAvailable ? formatSpeed(currentDownloadSpeed) : ""
@@ -210,10 +180,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
     private var tooltipText: String {
         switch currentDisplayMode {
-        case .latency:
-            return "iMoni\nOpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")\nDeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")\nStatus: \(deepSeekConnected || openAIConnected ? "Connected" : "Disconnected")"
         case .networkSpeed:
-            return "iMoni\n↑ \(networkAvailable ? formatSpeed(currentUploadSpeed) : "--")\n↓ \(networkAvailable ? formatSpeed(currentDownloadSpeed) : "--")\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
+            return "iMoni\n↑ \(networkAvailable ? formatSpeed(currentUploadSpeed) : "--")\n↓ \(networkAvailable ? formatSpeed(currentDownloadSpeed) : "--")\nStatus: \(networkAvailable ? "Connected" : "Disconnected")"
         case .memoryUsage:
             let used = Int(round(currentMemoryUsed))
             let pctVal = currentMemoryPercent
@@ -226,43 +194,17 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         }
     }
 
-    // MARK: - MonitorLatencyDelegate
-
-    func monitor(_ monitor: MonitorLatency, didUpdateLatency latency: TimeInterval, for endpoint: ServiceEndpoint) {
-        if endpoint.name == "DeepSeek" {
-            deepSeekLatency = latency
-            deepSeekConnected = true
-        } else if endpoint.name == "OpenAI" {
-            openAILatency = latency
-            openAIConnected = true
-        }
-        if currentDisplayMode == .latency { updateDisplay() }
-    }
-
-    func monitor(_ monitor: MonitorLatency, didFailWithError status: ConnectionStatus, for endpoint: ServiceEndpoint) {
-        if endpoint.name == "DeepSeek" {
-            deepSeekLatency = 0
-            deepSeekConnected = false
-        } else if endpoint.name == "OpenAI" {
-            openAILatency = 0
-            openAIConnected = false
-        }
-        if currentDisplayMode == .latency { updateDisplay() }
-    }
-
     // MARK: - MonitorNetworkDelegate
 
     func networkStats(_ stats: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
         currentUploadSpeed = uploadSpeed
         currentDownloadSpeed = downloadSpeed
         networkAvailable = true
-        connectionStatus = .connected
         if currentDisplayMode == .networkSpeed { updateDisplay() }
     }
 
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
         networkAvailable = false
-        connectionStatus = status
         if currentDisplayMode == .networkSpeed { updateDisplay() }
     }
 

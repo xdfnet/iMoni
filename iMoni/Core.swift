@@ -1,27 +1,6 @@
 import Foundation
 import AppKit
 
-// MARK: - Service Endpoint
-
-struct ServiceEndpoint {
-    let name: String
-    let host: String
-    let port: Int
-
-    init(name: String, host: String, port: Int = 443) {
-        self.name = name
-        self.host = host
-        self.port = port
-    }
-}
-
-// MARK: - AI Services
-
-let services: [ServiceEndpoint] = [
-    ServiceEndpoint(name: "DeepSeek", host: "api.deepseek.com"),
-    ServiceEndpoint(name: "OpenAI", host: "api.openai.com"),
-]
-
 // MARK: - Enums
 
 enum ConnectionStatus {
@@ -33,14 +12,11 @@ enum DisplayMode: String, CaseIterable {
     case systemUsage = "CPU/GPU"
     case memoryUsage = "Memory"
     case networkSpeed = "Network"
-    case latency = "Latency"
 }
 
 enum MonitorConstants {
-    static let connectionTimeout: TimeInterval = 0.5
     static let defaultInterval: TimeInterval = 1.0
     static let maxReasonableSpeed: Double = 1000.0
-    static let latencyQueueLabel = "com.imoni.latency"
     static let networkQueueLabel = "com.imoni.network"
 }
 
@@ -50,7 +26,7 @@ extension UserDefaults {
     var displayMode: DisplayMode {
         get {
             guard let raw = string(forKey: "displayMode"),
-                  let mode = DisplayMode(rawValue: raw) else { return .latency }
+                  let mode = DisplayMode(rawValue: raw) else { return .networkSpeed }
             return mode
         }
         set { set(newValue.rawValue, forKey: "displayMode") }
@@ -59,10 +35,6 @@ extension UserDefaults {
 }
 
 // MARK: - Formatting & Dispatch
-
-func formatLatency(_ latency: TimeInterval) -> String {
-    String(format: "%.0fms", latency * 1000)
-}
 
 /// 格式化网络速度，接收 **每秒兆字节数（MB/s）**，输出人类可读字符串（B/s ~ GB/s）。
 /// 内部还原为 B/s 后做 1000 进制转换（网络单位传统十进制）。

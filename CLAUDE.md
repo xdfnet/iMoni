@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-iMoni 是一个 macOS 菜单栏系统监控工具，实时监控 AI 服务延迟、网络流量、内存占用和 CPU/GPU 使用率。采用 Swift + AppKit 开发。**8 个源文件，零外部依赖。**
+iMoni 是一个 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用和 CPU/GPU 使用率。采用 Swift + AppKit 开发。**7 个源文件，零外部依赖。**
 
 ## 常用命令
 
@@ -17,14 +17,13 @@ make clean        # 清理构建文件
 make help         # 查看所有命令
 ```
 
-## 源文件（8 个）
+## 源文件（7 个）
 
 | 文件 | 行数 | 职责 |
 | --- | --- | --- |
 | `App.swift` | ~30 | 应用入口，`@main`，睡眠/唤醒事件转发 |
-| `Core.swift` | ~85 | 类型定义（ServiceEndpoint, DisplayMode, ConnectionStatus），工具函数（formatLatency, formatSpeed, mainQueue） |
-| `MenuBarController.swift` | ~310 | 菜单栏控制器，NSStatusItem 管理，6 个 Delegate 实现，双行 NSImage 渲染 |
-| `MonitorLatency.swift` | ~100 | TCP 延迟监控，NWConnection 建连时间，isPinging 防重叠 |
+| `Core.swift` | ~50 | 类型定义（DisplayMode, ConnectionStatus），工具函数（formatSpeed, mainQueue） |
+| `MenuBarController.swift` | ~260 | 菜单栏控制器，NSStatusItem 管理，5 个 Delegate 实现，双行 NSImage 渲染 |
 | `MonitorNetwork.swift` | ~130 | 网络流量监控，getifaddrs() 差值法，动态毛刺阈值 |
 | `MonitorMemory.swift` | ~100 | 物理内存监控，host_statistics64(HOST_VM_INFO64) |
 | `MonitorCPU.swift` | ~95 | CPU 占用率，host_processor_info() 逐核采集 |
@@ -32,8 +31,7 @@ make help         # 查看所有命令
 
 ## 显示模式 (View 菜单)
 
-- **Service**：双行显示 OpenAI / DeepSeek 的 TCP 连接延迟
-- **Network**：双行显示上行↑ / 下行↓ 网络速度
+- **Network**：双行显示上行 / 下行网络速度
 - **Memory**：双行显示 RAM 占用 GB + 百分比
 - **CPU/GPU**：双行显示 CPU / GPU 使用率
 
@@ -45,12 +43,6 @@ make help         # 查看所有命令
 - 同时读取 `ifi_obytes`（上行）和 `ifi_ibytes`（下行）
 - 差值法计算实时速度，按链路速率 `ifi_baudrate` 动态计算毛刺阈值
 - 所有接口流量累加
-
-### 延迟监控
-
-- `NWConnection` TCP 连接测量建连时间
-- 支持多实例同时监控不同服务
-- 超时保护（0.5s），防重叠（isPinging 守卫）
 
 ### 内存
 
@@ -81,18 +73,13 @@ t.setEventHandler { [weak self] in self?.update() }
 t.activate()
 ```
 
-## 服务端点
-
-- DeepSeek (api.deepseek.com)
-- OpenAI (api.openai.com)
-
 ## 配置持久化
 
 - `UserDefaults`：`displayMode`（当前显示模式）
 
 ## 架构特点
 
-- **代理模式**：`MonitorLatencyDelegate`, `MonitorNetworkDelegate`, `MonitorMemoryDelegate`, `MonitorCPUDelegate`, `MonitorGPUDelegate`
+- **代理模式**：`MonitorNetworkDelegate`, `MonitorMemoryDelegate`, `MonitorCPUDelegate`, `MonitorGPUDelegate`
 - **线程**：各监控器独立 serial queue，UI 更新统一 `mainQueue()`
 - **无外部依赖**：纯 Apple SDK（Foundation, Network, Cocoa, IOKit）
 - **模式切换**：切模式自动停掉不需要的监控器，不浪费 CPU
@@ -100,9 +87,7 @@ t.activate()
 ## 注意事项
 
 1. 菜单栏渲染走 `NSStatusItem.button.image`，修改显示需更新 `renderImage()` 方法
-2. 增加新服务只需在 `Core.swift` 的 `services` 数组追加，并对应增加 `MonitorLatency` 实例
-3. 延迟监控用 `NWConnection`，不调外部进程（跨平台一致，不依赖系统工具）
-4. `NSMenuDelegate.menuWillOpen` 每次菜单打开前重建内容，保证状态实时更新
-5. 内存单位统一用 **二进制**（1024³），不要用十进制 GB（10⁹），否则 host_info 的总字节数对不上
-6. CPU 的 `host_processor_info` 会分配内存，每次新采集前记得 `vm_deallocate` 旧指针
-7. MonitorConstants 和 mainQueue 定义在 Core.swift，在同一 module 内直接引用
+2. `NSMenuDelegate.menuWillOpen` 每次菜单打开前重建内容，保证状态实时更新
+3. 内存单位统一用 **二进制**（1024³），不要用十进制 GB（10⁹），否则 host_info 的总字节数对不上
+4. CPU 的 `host_processor_info` 会分配内存，每次新采集前记得 `vm_deallocate` 旧指针
+5. MonitorConstants 和 mainQueue 定义在 Core.swift，在同一 module 内直接引用
