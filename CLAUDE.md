@@ -93,7 +93,6 @@ t.activate()
 ## 架构特点
 
 - **代理模式**：`MonitorLatencyDelegate`, `MonitorNetworkDelegate`, `MonitorMemoryDelegate`, `MonitorCPUDelegate`, `MonitorGPUDelegate`
-- **安全沙盒**：启用 `com.apple.security.app-sandbox`
 - **线程**：各监控器独立 serial queue，UI 更新统一 `mainQueue()`
 - **无外部依赖**：纯 Apple SDK（Foundation, Network, Cocoa, IOKit）
 - **模式切换**：切模式自动停掉不需要的监控器，不浪费 CPU
@@ -102,7 +101,7 @@ t.activate()
 
 1. 菜单栏渲染走 `NSStatusItem.button.image`，修改显示需更新 `renderImage()` 方法
 2. 增加新服务只需在 `Core.swift` 的 `services` 数组追加，并对应增加 `MonitorLatency` 实例
-3. 沙盒限制不能调外部进程（如 `/sbin/ping`），延迟监控必须用 `NWConnection`
+3. 延迟监控用 `NWConnection`，不调外部进程（跨平台一致，不依赖系统工具）
 4. `NSMenuDelegate.menuWillOpen` 每次菜单打开前重建内容，保证状态实时更新
 5. 内存单位统一用 **二进制**（1024³），不要用十进制 GB（10⁹），否则 host_info 的总字节数对不上
 6. CPU 的 `host_processor_info` 会分配内存，每次新采集前记得 `vm_deallocate` 旧指针

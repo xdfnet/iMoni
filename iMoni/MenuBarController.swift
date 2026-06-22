@@ -161,18 +161,15 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private func updateDisplay() {
         let top: String
         let bottom: String
-        let connected: Bool
 
         switch currentDisplayMode {
         case .latency:
             top = "OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")"
             bottom = "DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")"
-            connected = deepSeekConnected || openAIConnected
-            connectionStatus = connected ? .connected : .disconnected
+            connectionStatus = (deepSeekConnected || openAIConnected) ? .connected : .disconnected
         case .networkSpeed:
             top = "\(currentUploadSpeed)"
             bottom = "\(currentDownloadSpeed)"
-            connected = connectionStatus == .connected
         case .memoryUsage:
             if memoryAvailable {
                 let used = Int(round(currentMemoryUsed))
@@ -184,20 +181,18 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
                 top = "--"
                 bottom = "--"
             }
-            connected = memoryAvailable
         case .systemUsage:
             let cpuStr = cpuAvailable ? String(format: "%3d%%", Int(round(currentCPUPercent))) : " --%"
             let gpuStr = gpuAvailable ? String(format: "%3d%%", Int(round(currentGPUPercent))) : " --%"
             top = "CPU\(cpuStr)"
             bottom = "GPU\(gpuStr)"
-            connected = cpuAvailable || gpuAvailable
         }
 
-        statusBarItem?.button?.image = renderImage(top: top, bottom: bottom, connected: connected, mode: currentDisplayMode)
+        statusBarItem?.button?.image = renderImage(top: top, bottom: bottom)
         statusBarItem?.button?.toolTip = tooltipText
     }
 
-    private func renderImage(top: String, bottom: String, connected: Bool, mode: DisplayMode) -> NSImage {
+    private func renderImage(top: String, bottom: String) -> NSImage {
         let font = NSFont.monospacedSystemFont(ofSize: 9, weight: .light)
         let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor]
 

@@ -34,7 +34,6 @@
 		3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetwork.swift; sourceTree = "<group>"; };
 		9666341B4C81F06B8D679B49 /* MonitorLatency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorLatency.swift; sourceTree = "<group>"; };
 		B3344CEBEDD33EE2813412B9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		E78182CF4D2FECF5C253EF7A /* iMoni.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iMoni.entitlements; sourceTree = "<group>"; };
 		FEDCBA0987654321ABCDEF01 /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
 		EB36529EA52167AA649BA1FD /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		F5D82B52906E1EC1492A1678 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
@@ -52,7 +51,6 @@
 				FEDCBA0987654321ABCDEF01 /* Core.swift */,
 				EB36529EA52167AA649BA1FD /* App.swift */,
 				3CC934CE62FFFAF200C3C135 /* Assets.xcassets */,
-				E78182CF4D2FECF5C253EF7A /* iMoni.entitlements */,
 				B3344CEBEDD33EE2813412B9 /* Info.plist */,
 				F5D82B52906E1EC1492A1678 /* MenuBarController.swift */,
 				9666341B4C81F06B8D679B49 /* MonitorLatency.swift */,
@@ -181,7 +179,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				COMBINE_HIDPI_IMAGES = YES;
 				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_ENTITLEMENTS = iMoni/iMoni.entitlements;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_TESTING_SEARCH_PATHS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -333,7 +330,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				COMBINE_HIDPI_IMAGES = YES;
 				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_ENTITLEMENTS = iMoni/iMoni.entitlements;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_TESTING_SEARCH_PATHS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
