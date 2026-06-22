@@ -14,14 +14,10 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     private let gpuMonitor = MonitorGPU()
     private var currentUploadSpeed: Double = 0
     private var currentDownloadSpeed: Double = 0
-    private var networkAvailable = false
     private var currentMemoryUsed: Double = 0
     private var currentMemoryPercent: Double = 0
-    private var memoryAvailable = false
     private var currentCPUPercent: Double = 0
     private var currentGPUPercent: Double = 0
-    private var cpuAvailable = false
-    private var gpuAvailable = false
     private var currentDisplayMode: DisplayMode = .networkSpeed
 
     override init() {
@@ -40,10 +36,6 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func suspend() {
         stopAllMonitors()
-        networkAvailable = false
-        memoryAvailable = false
-        cpuAvailable = false
-        gpuAvailable = false
         statusBarItem = nil
     }
 
@@ -71,10 +63,9 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     private func applySettings() {
         stopAllMonitors()
-        networkAvailable = false
-        memoryAvailable = false
-        cpuAvailable = false
-        gpuAvailable = false
+        currentUploadSpeed = 0; currentDownloadSpeed = 0
+        currentMemoryUsed = 0; currentMemoryPercent = 0
+        currentCPUPercent = 0; currentGPUPercent = 0
         switch currentDisplayMode {
         case .networkSpeed:
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
@@ -137,17 +128,13 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
         switch currentDisplayMode {
         case .networkSpeed:
-            top = networkAvailable ? formatSpeed(currentUploadSpeed) : ""
-            bottom = networkAvailable ? formatSpeed(currentDownloadSpeed) : ""
+            top = formatSpeed(currentUploadSpeed)
+            bottom = formatSpeed(currentDownloadSpeed)
         case .memoryUsage:
-            if memoryAvailable {
-                (top, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
-            } else {
-                top = ""; bottom = ""
-            }
+            (top, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
         case .systemUsage:
-            top = cpuAvailable ? "CPU\(formatCPUPercent(currentCPUPercent))" : ""
-            bottom = gpuAvailable ? "GPU\(formatCPUPercent(currentGPUPercent))" : ""
+            top = "CPU\(formatCPUPercent(currentCPUPercent))"
+            bottom = "GPU\(formatCPUPercent(currentGPUPercent))"
         }
 
         statusBarItem?.button?.image = renderImage(top: top, bottom: bottom)
@@ -174,16 +161,12 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     private var tooltipText: String {
         switch currentDisplayMode {
         case .networkSpeed:
-            return "iMoni\n↑ \(networkAvailable ? formatSpeed(currentUploadSpeed) : "--")\n↓ \(networkAvailable ? formatSpeed(currentDownloadSpeed) : "--")\nStatus: \(networkAvailable ? "Connected" : "Disconnected")"
+            return "iMoni\n↑ \(formatSpeed(currentUploadSpeed))\n↓ \(formatSpeed(currentDownloadSpeed))"
         case .memoryUsage:
-            let used = Int(round(currentMemoryUsed))
-            let pctVal = currentMemoryPercent
-            let total = pctVal > 0 ? Int(round(currentMemoryUsed / (pctVal / 100))) : 0
-            return "iMoni\n\(used)/\(total) GB (\(Int(round(pctVal)))%)\nStatus: \(memoryAvailable ? "OK" : "Failed")"
+            let (top, _) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
+            return "iMoni\n\(top) (\(Int(round(currentMemoryPercent)))%)"
         case .systemUsage:
-            let cpuStr = cpuAvailable ? "\(Int(round(currentCPUPercent)))%" : "--"
-            let gpuStr = gpuAvailable ? "\(Int(round(currentGPUPercent)))%" : "--"
-            return "iMoni\nCPU: \(cpuStr)\nGPU: \(gpuStr)"
+            return "iMoni\nCPU: \(Int(round(currentCPUPercent)))%\nGPU: \(Int(round(currentGPUPercent)))%"
         }
     }
 
@@ -192,12 +175,10 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
         currentUploadSpeed = uploadSpeed
         currentDownloadSpeed = downloadSpeed
-        networkAvailable = true
         updateDisplay()
     }
 
     func networkMonitorDidFail(_ monitor: MonitorNetwork) {
-        networkAvailable = false
         currentUploadSpeed = 0
         currentDownloadSpeed = 0
         updateDisplay()
@@ -208,12 +189,10 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     func memoryMonitor(_ monitor: MonitorMemory, didUpdateMemoryUsed usedGB: Double, percent: Double) {
         currentMemoryUsed = usedGB
         currentMemoryPercent = percent
-        memoryAvailable = true
         updateDisplay()
     }
 
     func memoryMonitorDidFail(_ monitor: MonitorMemory) {
-        memoryAvailable = false
         currentMemoryUsed = 0
         currentMemoryPercent = 0
         updateDisplay()
@@ -223,12 +202,10 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func cpuMonitor(_ monitor: MonitorCPU, didUpdateCPUUsage percent: Double) {
         currentCPUPercent = percent
-        cpuAvailable = true
         updateDisplay()
     }
 
     func cpuMonitorDidFail(_ monitor: MonitorCPU) {
-        cpuAvailable = false
         currentCPUPercent = 0
         updateDisplay()
     }
@@ -237,12 +214,10 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func gpuMonitor(_ monitor: MonitorGPU, didUpdateGPUUsage percent: Double) {
         currentGPUPercent = percent
-        gpuAvailable = true
         updateDisplay()
     }
 
     func gpuMonitorDidFail(_ monitor: MonitorGPU) {
-        gpuAvailable = false
         currentGPUPercent = 0
         updateDisplay()
     }
