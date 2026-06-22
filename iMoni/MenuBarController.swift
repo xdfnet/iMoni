@@ -164,8 +164,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
 
         switch currentDisplayMode {
         case .latency:
-            top = "OpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")"
-            bottom = "DeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")"
+            top = openAIConnected ? "OpenAI: \(formatLatency(openAILatency))" : ""
+            bottom = deepSeekConnected ? "DeepSeek: \(formatLatency(deepSeekLatency))" : ""
             connectionStatus = (deepSeekConnected || openAIConnected) ? .connected : .disconnected
         case .networkSpeed:
             top = "\(currentUploadSpeed)"
@@ -178,14 +178,12 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
                 top = "\(used)/\(total) GB"
                 bottom = "PCT \(Int(round(pct)))%"
             } else {
-                top = "--"
-                bottom = "--"
+                top = ""
+                bottom = ""
             }
         case .systemUsage:
-            let cpuStr = cpuAvailable ? String(format: "%3d%%", Int(round(currentCPUPercent))) : " --%"
-            let gpuStr = gpuAvailable ? String(format: "%3d%%", Int(round(currentGPUPercent))) : " --%"
-            top = "CPU\(cpuStr)"
-            bottom = "GPU\(gpuStr)"
+            top = cpuAvailable ? "CPU\(String(format: "%3d%%", Int(round(currentCPUPercent))))" : ""
+            bottom = gpuAvailable ? "GPU\(String(format: "%3d%%", Int(round(currentGPUPercent))))" : ""
         }
 
         statusBarItem?.button?.image = renderImage(top: top, bottom: bottom)
