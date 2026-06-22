@@ -2,7 +2,7 @@ import Foundation
 
 protocol MonitorNetworkDelegate: AnyObject {
     func networkStats(_ stats: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double)
-    func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus)
+    func networkStatsDidFail(_ stats: MonitorNetwork)
 }
 
 class MonitorNetwork {
@@ -16,8 +16,6 @@ class MonitorNetwork {
     private var lastBytesSent: UInt64 = 0
     private var lastUpdateTime: CFAbsoluteTime = 0
 
-    private var totalDownloadBytes: UInt64 = 0
-    private var totalUploadBytes: UInt64 = 0
     private var lastTransmitRate: Double = 0
 
     init(interval: TimeInterval = MonitorConstants.defaultInterval) {
@@ -26,13 +24,11 @@ class MonitorNetwork {
 
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         guard let initial = totalBytes() else {
-            delegate?.networkStats(self, didFailWithError: .disconnected)
+            delegate?.networkStatsDidFail(self)
             return
         }
         lastBytesReceived = initial.1
         lastBytesSent = initial.0
-        totalDownloadBytes = 0
-        totalUploadBytes = 0
         lastUpdateTime = CFAbsoluteTimeGetCurrent()
         self.interval = interval
         isRunning = true
@@ -44,8 +40,6 @@ class MonitorNetwork {
         timer.stop()
         lastBytesReceived = 0
         lastBytesSent = 0
-        totalDownloadBytes = 0
-        totalUploadBytes = 0
         lastUpdateTime = 0
     }
 
@@ -69,7 +63,7 @@ class MonitorNetwork {
         guard let current = totalBytes() else {
             mainQueue { [weak self] in
                 guard let self else { return }
-                self.delegate?.networkStats(self, didFailWithError: .disconnected)
+                self.delegate?.networkStatsDidFail(self)
             }
             return
         }
@@ -101,9 +95,6 @@ class MonitorNetwork {
         }()
         if diffReceived > maxDelta { diffReceived = 0 }
         if diffSent > maxDelta { diffSent = 0 }
-
-        totalDownloadBytes += diffReceived
-        totalUploadBytes += diffSent
 
         let speedDown = Double(diffReceived) / elapsed / (1000.0 * 1000.0)
         let speedUp = Double(diffSent) / elapsed / (1000.0 * 1000.0)

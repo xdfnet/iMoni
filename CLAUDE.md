@@ -22,7 +22,7 @@ make help         # 查看所有命令
 | 文件 | 行数 | 职责 |
 | --- | --- | --- |
 | `App.swift` | ~30 | 应用入口，`@main`，睡眠/唤醒事件转发 |
-| `Core.swift` | ~50 | 类型定义（DisplayMode, ConnectionStatus），工具函数（formatSpeed, mainQueue） |
+| `Core.swift` | ~40 | 类型定义（DisplayMode），工具函数（formatSpeed, mainQueue） |
 | `MenuBarController.swift` | ~260 | 菜单栏控制器，NSStatusItem 管理，5 个 Delegate 实现，双行 NSImage 渲染 |
 | `MonitorNetwork.swift` | ~130 | 网络流量监控，getifaddrs() 差值法，动态毛刺阈值 |
 | `MonitorMemory.swift` | ~100 | 物理内存监控，host_statistics64(HOST_VM_INFO64) |

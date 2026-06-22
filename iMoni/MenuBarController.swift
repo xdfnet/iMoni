@@ -203,7 +203,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         if currentDisplayMode == .networkSpeed { updateDisplay() }
     }
 
-    func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
+    func networkStatsDidFail(_ stats: MonitorNetwork) {
         networkAvailable = false
         if currentDisplayMode == .networkSpeed { updateDisplay() }
     }

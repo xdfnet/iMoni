@@ -1,12 +1,6 @@
 import Foundation
-import AppKit
 
 // MARK: - Enums
-
-enum ConnectionStatus {
-    case connected
-    case disconnected
-}
 
 enum DisplayMode: String, CaseIterable {
     case systemUsage = "CPU/GPU"
@@ -16,7 +10,6 @@ enum DisplayMode: String, CaseIterable {
 
 enum MonitorConstants {
     static let defaultInterval: TimeInterval = 1.0
-    static let maxReasonableSpeed: Double = 1000.0
     static let networkQueueLabel = "com.imoni.network"
 }
 
