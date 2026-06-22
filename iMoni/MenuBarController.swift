@@ -12,8 +12,9 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private var openAILatency: TimeInterval = 0
     private var deepSeekConnected = false
     private var openAIConnected = false
-    private var currentUploadSpeed = ""
-    private var currentDownloadSpeed = ""
+    private var currentUploadSpeed: Double = 0
+    private var currentDownloadSpeed: Double = 0
+    private var networkAvailable = false
     private var currentMemoryUsed: Double = 0
     private var currentMemoryPercent: Double = 0
     private var memoryAvailable = false
@@ -168,8 +169,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
             bottom = deepSeekConnected ? "DeepSeek: \(formatLatency(deepSeekLatency))" : ""
             connectionStatus = (deepSeekConnected || openAIConnected) ? .connected : .disconnected
         case .networkSpeed:
-            top = "\(currentUploadSpeed)"
-            bottom = "\(currentDownloadSpeed)"
+            top = networkAvailable ? formatSpeed(currentUploadSpeed) : ""
+            bottom = networkAvailable ? formatSpeed(currentDownloadSpeed) : ""
         case .memoryUsage:
             if memoryAvailable {
                 let used = Int(round(currentMemoryUsed))
@@ -212,7 +213,7 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
         case .latency:
             return "iMoni\nOpenAI: \(openAIConnected ? formatLatency(openAILatency) : "--")\nDeepSeek: \(deepSeekConnected ? formatLatency(deepSeekLatency) : "--")\nStatus: \(deepSeekConnected || openAIConnected ? "Connected" : "Disconnected")"
         case .networkSpeed:
-            return "iMoni\n↑ \(currentUploadSpeed)\n↓ \(currentDownloadSpeed)\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
+            return "iMoni\n↑ \(networkAvailable ? formatSpeed(currentUploadSpeed) : "--")\n↓ \(networkAvailable ? formatSpeed(currentDownloadSpeed) : "--")\nStatus: \(connectionStatus == .connected ? "Connected" : "Disconnected")"
         case .memoryUsage:
             let used = Int(round(currentMemoryUsed))
             let pctVal = currentMemoryPercent
@@ -252,14 +253,15 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     // MARK: - MonitorNetworkDelegate
 
     func networkStats(_ stats: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
-        currentUploadSpeed = formatSpeed(uploadSpeed)
-        currentDownloadSpeed = formatSpeed(downloadSpeed)
+        currentUploadSpeed = uploadSpeed
+        currentDownloadSpeed = downloadSpeed
+        networkAvailable = true
         connectionStatus = .connected
         if currentDisplayMode == .networkSpeed { updateDisplay() }
     }
 
     func networkStats(_ stats: MonitorNetwork, didFailWithError status: ConnectionStatus) {
-        currentDownloadSpeed = "--"
+        networkAvailable = false
         connectionStatus = status
         if currentDisplayMode == .networkSpeed { updateDisplay() }
     }
