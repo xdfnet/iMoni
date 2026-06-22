@@ -40,6 +40,10 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         memoryMonitor.stopMonitoring()
         cpuMonitor.stopMonitoring()
         gpuMonitor.stopMonitoring()
+        networkAvailable = false
+        memoryAvailable = false
+        cpuAvailable = false
+        gpuAvailable = false
         statusBarItem = nil
     }
 
@@ -202,6 +206,8 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func networkStatsDidFail(_ stats: MonitorNetwork) {
         networkAvailable = false
+        currentUploadSpeed = 0
+        currentDownloadSpeed = 0
         if currentDisplayMode == .networkSpeed { updateDisplay() }
     }
 
@@ -216,6 +222,8 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func memoryMonitorDidFail(_ monitor: MonitorMemory) {
         memoryAvailable = false
+        currentMemoryUsed = 0
+        currentMemoryPercent = 0
         if currentDisplayMode == .memoryUsage { updateDisplay() }
     }
 
@@ -229,6 +237,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func cpuMonitorDidFail(_ monitor: MonitorCPU) {
         cpuAvailable = false
+        currentCPUPercent = 0
         if currentDisplayMode == .systemUsage { updateDisplay() }
     }
 
@@ -242,6 +251,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func gpuMonitorDidFail(_ monitor: MonitorGPU) {
         gpuAvailable = false
+        currentGPUPercent = 0
         if currentDisplayMode == .systemUsage { updateDisplay() }
     }
 }

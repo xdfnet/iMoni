@@ -40,6 +40,7 @@ class MonitorNetwork {
         timer.stop()
         lastBytesReceived = 0
         lastBytesSent = 0
+        lastTransmitRate = 0
         lastUpdateTime = 0
     }
 
