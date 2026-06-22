@@ -53,9 +53,6 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     private func setupStatusBar() {
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let button = statusBarItem?.button {
-            button.font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .light)
-        }
         let menu = NSMenu()
         menu.delegate = self
         statusBarItem?.menu = menu
