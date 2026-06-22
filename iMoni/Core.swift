@@ -46,6 +46,18 @@ func formatSpeed(_ speedMBs: Double) -> String {
     return String(format: "%.1f %@", value, units[unitIndex])
 }
 
+/// 格式化 CPU/GPU 使用率（如 "CPU 50%"），宽度固定 3 位数字
+func formatCPUPercent(_ percent: Double) -> String {
+    String(format: "%3d%%", Int(round(percent)))
+}
+
+/// 格式化内存用量，返回 (显示文本, 百分比文本)
+func formatMemoryGB(_ usedGB: Double, percent: Double) -> (top: String, bottom: String) {
+    let used = Int(round(usedGB))
+    let total = percent > 0 ? Int(round(usedGB / (percent / 100))) : 0
+    return ("\(used)/\(total) GB", "PCT \(Int(round(percent)))%")
+}
+
 func mainQueue(_ block: @escaping () -> Void) {
     if Thread.isMainThread { block() }
     else { DispatchQueue.main.async(execute: block) }

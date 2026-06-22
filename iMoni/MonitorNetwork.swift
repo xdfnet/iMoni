@@ -1,8 +1,8 @@
 import Foundation
 
 protocol MonitorNetworkDelegate: AnyObject {
-    func networkStats(_ stats: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double)
-    func networkStatsDidFail(_ stats: MonitorNetwork)
+    func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double)
+    func networkMonitorDidFail(_ monitor: MonitorNetwork)
 }
 
 class MonitorNetwork {
@@ -24,11 +24,11 @@ class MonitorNetwork {
 
     func startMonitoring(interval: TimeInterval = MonitorConstants.defaultInterval) {
         guard let initial = totalBytes() else {
-            delegate?.networkStatsDidFail(self)
+            delegate?.networkMonitorDidFail(self)
             return
         }
-        lastBytesReceived = initial.1
-        lastBytesSent = initial.0
+        lastBytesReceived = initial.received
+        lastBytesSent = initial.sent
         lastUpdateTime = CFAbsoluteTimeGetCurrent()
         self.interval = interval
         isRunning = true
@@ -64,7 +64,7 @@ class MonitorNetwork {
         guard let current = totalBytes() else {
             mainQueue { [weak self] in
                 guard let self else { return }
-                self.delegate?.networkStatsDidFail(self)
+                self.delegate?.networkMonitorDidFail(self)
             }
             return
         }
@@ -72,20 +72,20 @@ class MonitorNetwork {
         var diffReceived: UInt64 = 0
         var diffSent: UInt64 = 0
 
-        if current.1 >= lastBytesReceived {
-            diffReceived = current.1 - lastBytesReceived
+        if current.received >= lastBytesReceived {
+            diffReceived = current.received - lastBytesReceived
         } else {
             // 32-bit 计数器溢出（ifi_ibytes 是 u_int32_t，约 4GB 归零）
-            diffReceived = current.1 + (UInt64(UInt32.max) + 1) - lastBytesReceived
+            diffReceived = current.received + (UInt64(UInt32.max) + 1) - lastBytesReceived
         }
-        if current.0 >= lastBytesSent {
-            diffSent = current.0 - lastBytesSent
+        if current.sent >= lastBytesSent {
+            diffSent = current.sent - lastBytesSent
         } else {
-            diffSent = current.0 + (UInt64(UInt32.max) + 1) - lastBytesSent
+            diffSent = current.sent + (UInt64(UInt32.max) + 1) - lastBytesSent
         }
 
-        lastBytesReceived = current.1
-        lastBytesSent = current.0
+        lastBytesReceived = current.received
+        lastBytesSent = current.sent
 
         let maxDelta: UInt64 = {
             let intervalSec = max(self.interval, 0.5)
@@ -104,11 +104,11 @@ class MonitorNetwork {
 
         mainQueue { [weak self] in
             guard let self else { return }
-            self.delegate?.networkStats(self, didUpdateSpeed: speedUp, downloadSpeed: speedDown)
+            self.delegate?.networkMonitor(self, didUpdateSpeed: speedUp, downloadSpeed: speedDown)
         }
     }
 
-    private func totalBytes() -> (UInt64, UInt64)? {
+    private func totalBytes() -> (sent: UInt64, received: UInt64)? {
         var ifaddr: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&ifaddr) == 0, let start = ifaddr else { return nil }
         defer { freeifaddrs(ifaddr) }

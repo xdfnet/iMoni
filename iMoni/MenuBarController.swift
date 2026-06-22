@@ -1,6 +1,12 @@
 import Cocoa
 
 class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate, MonitorCPUDelegate, MonitorGPUDelegate, NSMenuDelegate {
+    private func stopAllMonitors() {
+        networkMonitor.stopMonitoring()
+        memoryMonitor.stopMonitoring()
+        cpuMonitor.stopMonitoring()
+        gpuMonitor.stopMonitoring()
+    }
     private var statusBarItem: NSStatusItem?
     private let networkMonitor = MonitorNetwork()
     private let memoryMonitor = MonitorMemory()
@@ -28,18 +34,12 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     }
 
     func cleanup() {
-        networkMonitor.stopMonitoring()
-        memoryMonitor.stopMonitoring()
-        cpuMonitor.stopMonitoring()
-        gpuMonitor.stopMonitoring()
+        stopAllMonitors()
         statusBarItem = nil
     }
 
     func suspend() {
-        networkMonitor.stopMonitoring()
-        memoryMonitor.stopMonitoring()
-        cpuMonitor.stopMonitoring()
-        gpuMonitor.stopMonitoring()
+        stopAllMonitors()
         networkAvailable = false
         memoryAvailable = false
         cpuAvailable = false
@@ -70,20 +70,13 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     }
 
     private func applySettings() {
+        stopAllMonitors()
         switch currentDisplayMode {
         case .networkSpeed:
-            memoryMonitor.stopMonitoring()
-            cpuMonitor.stopMonitoring()
-            gpuMonitor.stopMonitoring()
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .memoryUsage:
-            networkMonitor.stopMonitoring()
-            cpuMonitor.stopMonitoring()
-            gpuMonitor.stopMonitoring()
             memoryMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .systemUsage:
-            networkMonitor.stopMonitoring()
-            memoryMonitor.stopMonitoring()
             cpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
             gpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         }
@@ -144,18 +137,13 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
             bottom = networkAvailable ? formatSpeed(currentDownloadSpeed) : ""
         case .memoryUsage:
             if memoryAvailable {
-                let used = Int(round(currentMemoryUsed))
-                let pct = currentMemoryPercent
-                let total = pct > 0 ? Int(round(currentMemoryUsed / (pct / 100))) : 0
-                top = "\(used)/\(total) GB"
-                bottom = "PCT \(Int(round(pct)))%"
+                (top, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
             } else {
-                top = ""
-                bottom = ""
+                top = ""; bottom = ""
             }
         case .systemUsage:
-            top = cpuAvailable ? "CPU\(String(format: "%3d%%", Int(round(currentCPUPercent))))" : ""
-            bottom = gpuAvailable ? "GPU\(String(format: "%3d%%", Int(round(currentGPUPercent))))" : ""
+            top = cpuAvailable ? "CPU\(formatCPUPercent(currentCPUPercent))" : ""
+            bottom = gpuAvailable ? "GPU\(formatCPUPercent(currentGPUPercent))" : ""
         }
 
         statusBarItem?.button?.image = renderImage(top: top, bottom: bottom)
@@ -197,18 +185,18 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     // MARK: - MonitorNetworkDelegate
 
-    func networkStats(_ stats: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
+    func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
         currentUploadSpeed = uploadSpeed
         currentDownloadSpeed = downloadSpeed
         networkAvailable = true
-        if currentDisplayMode == .networkSpeed { updateDisplay() }
+        updateDisplay()
     }
 
-    func networkStatsDidFail(_ stats: MonitorNetwork) {
+    func networkMonitorDidFail(_ monitor: MonitorNetwork) {
         networkAvailable = false
         currentUploadSpeed = 0
         currentDownloadSpeed = 0
-        if currentDisplayMode == .networkSpeed { updateDisplay() }
+        updateDisplay()
     }
 
     // MARK: - MonitorMemoryDelegate
@@ -217,14 +205,14 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         currentMemoryUsed = usedGB
         currentMemoryPercent = percent
         memoryAvailable = true
-        if currentDisplayMode == .memoryUsage { updateDisplay() }
+        updateDisplay()
     }
 
     func memoryMonitorDidFail(_ monitor: MonitorMemory) {
         memoryAvailable = false
         currentMemoryUsed = 0
         currentMemoryPercent = 0
-        if currentDisplayMode == .memoryUsage { updateDisplay() }
+        updateDisplay()
     }
 
     // MARK: - MonitorCPUDelegate
@@ -232,13 +220,13 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     func cpuMonitor(_ monitor: MonitorCPU, didUpdateCPUUsage percent: Double) {
         currentCPUPercent = percent
         cpuAvailable = true
-        if currentDisplayMode == .systemUsage { updateDisplay() }
+        updateDisplay()
     }
 
     func cpuMonitorDidFail(_ monitor: MonitorCPU) {
         cpuAvailable = false
         currentCPUPercent = 0
-        if currentDisplayMode == .systemUsage { updateDisplay() }
+        updateDisplay()
     }
 
     // MARK: - MonitorGPUDelegate
@@ -246,12 +234,12 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     func gpuMonitor(_ monitor: MonitorGPU, didUpdateGPUUsage percent: Double) {
         currentGPUPercent = percent
         gpuAvailable = true
-        if currentDisplayMode == .systemUsage { updateDisplay() }
+        updateDisplay()
     }
 
     func gpuMonitorDidFail(_ monitor: MonitorGPU) {
         gpuAvailable = false
         currentGPUPercent = 0
-        if currentDisplayMode == .systemUsage { updateDisplay() }
+        updateDisplay()
     }
 }
