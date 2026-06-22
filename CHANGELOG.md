@@ -4,6 +4,29 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.5.0] - 2026-06-22
+
+### 🔨 精简重构
+
+- **移除 Latency 模式**：删除 `MonitorLatency.swift`、`ServiceEndpoint`、`services`、`formatLatency` 等全部延迟相关代码
+- **统一数据模式**：所有监控器存原始值 + 无条件格式化显示，去掉 `*Available` 标记
+- **初始显示优化**：不再显示 `"--"` 占位符，初始统一为 0（如 `0 B/s`、`0/0 GB`、`CPU  0%`）
+- **代码规范**：delegate 命名统一、提取 `stopAllMonitors` 消除重复、元组命名访问
+
+### 🔧 优化改进
+
+- 失败回调统一重置数值为 0
+- `applySettings` 清空数值防止模式切换闪旧数据
+- 网络流量 `totalDownloadBytes`/`totalUploadBytes` 死代码移除
+- 去除未使用的 `button.font`、`maxReasonableSpeed`、`ConnectionStatus`
+- 默认显示模式改为 Network
+
+### 文件变更
+
+- 删除：`MonitorLatency.swift`（107 行）
+- 修改：`Core.swift` 从 85→55 行，`MenuBarController.swift` 从 310→210 行
+- 剩余：**7 个源文件，812 行代码**
+
 ## [1.3.2] - 2026-06-11
 
 ### 🔧 统一采集方式

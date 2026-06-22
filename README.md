@@ -7,16 +7,15 @@
 
 ## 简介
 
-iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控 AI 服务延迟、网络流量、内存占用和 CPU/GPU 使用率。**8 个源文件，零外部依赖。**
+iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用和 CPU/GPU 使用率。**7 个源文件，零外部依赖。**
 
 ## 特性
 
-### 4 种显示模式
+### 3 种显示模式
 
 | 模式 | 内容 | 技术 |
 |------|------|------|
-| **Service** | OpenAI / DeepSeek TCP 连接延迟 | `NWConnection` 建连时间 |
-| **Network** | 网络上行↑ / 下行↓ 实时速率 | `getifaddrs()` 字节差值 |
+| **Network** | 网络上行 / 下行实时速率 | `getifaddrs()` 字节差值 |
 | **Memory** | 物理内存占用 GB + 百分比 | `host_statistics64` + `host_info` |
 | **CPU/GPU** | CPU / GPU 使用率百分比 | `host_processor_info` + IOKit `IOAccelerator` |
 
@@ -26,7 +25,6 @@ iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控 AI 服
 - **模式切换**：View 菜单一键切换，自动启停对应监控器
 - **配置持久化**：`UserDefaults` 保存当前显示模式
 - **休眠唤醒**：监听系统睡眠/唤醒事件，自动暂停恢复
-- **颜色反馈**：正常显示 label 色，异常/断连显示红色
 
 ## 环境要求
 
@@ -46,7 +44,7 @@ make install   # 构建 Release 并安装到 /Applications
 
 启动后出现在菜单栏，点击弹出菜单：
 
-- **View** → 切换 4 种显示模式
+- **View** → 切换 3 种显示模式
 - **Quit** → 退出应用
 
 ## 项目结构
@@ -54,14 +52,13 @@ make install   # 构建 Release 并安装到 /Applications
 ```text
 iMoni/
 ├── iMoni/
-│   ├── App.swift               # 应用入口（~30行）
-│   ├── Core.swift              # 类型定义、格式化、工具函数（~80行）
-│   ├── MenuBarController.swift # 菜单栏 UI + 监控编排（~310行）
-│   ├── MonitorLatency.swift    # TCP 延迟监控（~100行）
-│   ├── MonitorNetwork.swift    # 网络流量监控（~130行）
-│   ├── MonitorMemory.swift     # 物理内存监控（~100行）
-│   ├── MonitorCPU.swift        # CPU 占用率监控（~95行）
-│   └── MonitorGPU.swift        # GPU 占用率监控（~100行）
+│   ├── App.swift               # 应用入口（~35行）
+│   ├── Core.swift              # 类型定义、格式化、工具函数（~55行）
+│   ├── MenuBarController.swift # 菜单栏 UI + 监控编排（~210行）
+│   ├── MonitorNetwork.swift    # 网络流量监控（~140行）
+│   ├── MonitorMemory.swift     # 物理内存监控（~95行）
+│   ├── MonitorCPU.swift        # CPU 占用率监控（~105行）
+│   └── MonitorGPU.swift        # GPU 占用率监控（~85行）
 ├── Assets.xcassets/
 └── Makefile
 ```
@@ -72,7 +69,6 @@ iMoni/
 
 | 指标 | API | 来源 |
 |------|-----|------|
-| TCP 延迟 | `NWConnection` | Network.framework |
 | 网络流量 | `getifaddrs()` → `ifi_obytes/ifi_ibytes` | POSIX |
 | 物理内存 | `host_statistics64(HOST_VM_INFO64)` + `host_info(HOST_BASIC_INFO)` | Mach API |
 | CPU 使用率 | `host_processor_info(PROCESSOR_CPU_LOAD_INFO)` 逐核采集 | Mach API |
@@ -98,9 +94,9 @@ make clean     # 清理
 
 ## 版本历史
 
+- **v1.5.0** (2026-06-22): 移除 Latency 模式，精简至 7 源文件；统一数据模式；代码规范优化
 - **v1.3.2** (2026-06-11): 统一采集方式对齐 Stats；修复内存单位混用；全部改用 DispatchSourceTimer
-- **v1.3.1** (2026-06-10): 新增 Memory/CPU/GPU 监控；菜单重构；移除版本号显示
-- **v1.3.0** (2026-06-10): 全面重构：上下行流量展示 + 双服务延迟 + ICMP/TCP 监控 + 原生菜单栏
+- **v1.3.1** (2026-06-10): 新增 Memory/CPU/GPU 监控；菜单重构
 - [历史版本](https://github.com/xdfnet/iMoni/releases)
 
 ## 许可证
