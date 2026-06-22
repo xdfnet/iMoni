@@ -12,8 +12,8 @@ class MenuBarController: NSObject, MonitorLatencyDelegate, MonitorNetworkDelegat
     private var openAILatency: TimeInterval = 0
     private var deepSeekConnected = false
     private var openAIConnected = false
-    private var currentUploadSpeed = "--"
-    private var currentDownloadSpeed = "--"
+    private var currentUploadSpeed = ""
+    private var currentDownloadSpeed = ""
     private var currentMemoryUsed: Double = 0
     private var currentMemoryPercent: Double = 0
     private var memoryAvailable = false
