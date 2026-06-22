@@ -71,6 +71,10 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     private func applySettings() {
         stopAllMonitors()
+        networkAvailable = false
+        memoryAvailable = false
+        cpuAvailable = false
+        gpuAvailable = false
         switch currentDisplayMode {
         case .networkSpeed:
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
