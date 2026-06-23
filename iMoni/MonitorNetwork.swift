@@ -16,7 +16,8 @@ class MonitorNetwork {
     private var lastBytesSent: UInt64 = 0
     private var lastUpdateTime: CFAbsoluteTime = 0
 
-    private var lastTransmitRate: Double = 0
+    // 上次采样的链路速率（Mbits/s），用于动态计算毛刺阈值
+    private var lastLinkRate: Double = 0
 
     init(interval: TimeInterval = MonitorConstants.defaultInterval) {
         self.interval = interval
@@ -40,15 +41,17 @@ class MonitorNetwork {
         timer.stop()
         lastBytesReceived = 0
         lastBytesSent = 0
-        lastTransmitRate = 0
+        lastLinkRate = 0
         lastUpdateTime = 0
     }
 
     func cleanup() { stopMonitoring() }
 
     func updateInterval(_ newInterval: TimeInterval) {
+        let wasActive = timer.isActive
+        timer.stop()
         interval = newInterval
-        if timer.isActive {
+        if wasActive {
             timer.start(queue: queue, interval: interval) { [weak self] in self?.update() }
         }
     }
@@ -87,13 +90,12 @@ class MonitorNetwork {
         lastBytesReceived = current.received
         lastBytesSent = current.sent
 
-        let maxDelta: UInt64 = {
-            let intervalSec = max(self.interval, 0.5)
-            if lastTransmitRate > 0 {
-                return UInt64(lastTransmitRate * 1_000_000 / 8 * 1.5 * intervalSec)
-            }
-            return UInt64(2_000_000_000 * intervalSec)
-        }()
+        // 毛刺阈值：基于链路速率 × 1.5 倍系数（覆盖突发）
+        // lastLinkRate 单位是 Mbits/s，换算 bytes/s：* 1_000_000 / 8
+        // 首次启动无链路速率时，用 1000 Mbps（千兆）作为安全默认值
+        let linkRate = lastLinkRate > 0 ? lastLinkRate : 1000.0
+        let intervalSec = max(self.interval, 0.5)
+        let maxDelta = UInt64(linkRate * 1_000_000 / 8 * 1.5 * intervalSec)
         if diffReceived > maxDelta { diffReceived = 0 }
         if diffSent > maxDelta { diffSent = 0 }
 
@@ -134,7 +136,7 @@ class MonitorNetwork {
         }
 
         if maxBaud > 0 {
-            lastTransmitRate = Double(maxBaud) / 1_000_000.0
+            lastLinkRate = Double(maxBaud) / 1_000_000.0
         }
 
         return (totalSent, totalReceived)

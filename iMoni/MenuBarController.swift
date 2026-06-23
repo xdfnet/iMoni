@@ -128,8 +128,8 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
         switch currentDisplayMode {
         case .networkSpeed:
-            top = formatSpeed(currentUploadSpeed)
-            bottom = formatSpeed(currentDownloadSpeed)
+            top = formatSpeed(currentDownloadSpeed)
+            bottom = formatSpeed(currentUploadSpeed)
         case .memoryUsage:
             (top, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
         case .systemUsage:
@@ -161,7 +161,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     private var tooltipText: String {
         switch currentDisplayMode {
         case .networkSpeed:
-            return "iMoni\n↑ \(formatSpeed(currentUploadSpeed))\n↓ \(formatSpeed(currentDownloadSpeed))"
+            return "iMoni\n↓ \(formatSpeed(currentDownloadSpeed))\n↑ \(formatSpeed(currentUploadSpeed))"
         case .memoryUsage:
             let (top, _) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
             return "iMoni\n\(top) (\(Int(round(currentMemoryPercent)))%)"

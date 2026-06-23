@@ -105,20 +105,13 @@ build-release:
 install:
 	@echo "$(B)安装到 /Applications...$(N)"
 	@pkill -f "$(PROJECT_NAME)" 2>/dev/null || true
+	$(MAKE) build-release
 	@rm -rf "$(INSTALL_DIR)/$(PROJECT_NAME).app" 2>/dev/null || true
 	@APP=$$(find $(BUILD_DIR) -name "$(PROJECT_NAME).app" -type d | head -1); \
 	if [ -n "$$APP" ]; then \
 		cp -R "$$APP" $(INSTALL_DIR)/; \
 		echo "$(G)已安装: $(INSTALL_DIR)/$(PROJECT_NAME).app$(N)"; \
-	else \
-		echo "$(Y)未构建，先构建 Release...$(N)"; \
-		$(MAKE) build-release; \
-		APP=$$(find $(BUILD_DIR) -name "$(PROJECT_NAME).app" -type d | head -1); \
-		if [ -n "$$APP" ]; then \
-			cp -R "$$APP" $(INSTALL_DIR)/; \
-			echo "$(G)已安装: $(INSTALL_DIR)/$(PROJECT_NAME).app$(N)"; \
-		else echo "$(R)构建失败$(N)"; exit 1; fi \
-	fi
+	else echo "$(R)构建失败$(N)"; exit 1; fi
 
 package:
 	@echo "$(B)打包 zip...$(N)"
