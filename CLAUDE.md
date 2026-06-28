@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-iMoni 是一个 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用和 CPU/GPU 使用率。采用 Swift + AppKit 开发。**7 个源文件，零外部依赖。**
+iMoni 是一个 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用、CPU/GPU 使用率和网络延迟稳定性。采用 Swift + AppKit 开发。**8 个源文件，零外部依赖。**
 
 ## 常用命令
 
@@ -17,23 +17,25 @@ make clean        # 清理构建文件
 make help         # 查看所有命令
 ```
 
-## 源文件（7 个）
+## 源文件（8 个）
 
 | 文件 | 行数 | 职责 |
 | --- | --- | --- |
 | `App.swift` | ~30 | 应用入口，`@main`，睡眠/唤醒事件转发 |
-| `Core.swift` | ~55 | 类型定义（DisplayMode），工具函数（formatSpeed, formatMemoryGB, formatCPUPercent, mainQueue） |
-| `MenuBarController.swift` | ~240 | 菜单栏控制器，NSStatusItem 管理，5 个 Delegate 实现，双行 NSImage 渲染 |
+| `Core.swift` | ~70 | 类型定义（DisplayMode），工具函数（formatSpeed, formatMemoryGB, formatCPUPercent, formatLatency, formatJitter, formatLossRate, mainQueue） |
+| `MenuBarController.swift` | ~260 | 菜单栏控制器，NSStatusItem 管理，6 个 Delegate 实现，双行 NSImage 渲染 |
 | `MonitorNetwork.swift` | ~130 | 网络流量监控，getifaddrs() 差值法，动态毛刺阈值 |
 | `MonitorMemory.swift` | ~100 | 物理内存监控，host_statistics64(HOST_VM_INFO64) |
 | `MonitorCPU.swift` | ~95 | CPU 占用率，host_processor_info() 逐核采集 |
 | `MonitorGPU.swift` | ~100 | GPU 占用率，IOKit IOAccelerator Device Utilization % |
+| `MonitorStability.swift` | ~160 | 网络稳定性监控，HEAD `www.gstatic.com/generate_204` 长连接，追踪延迟/抖动/丢包率 |
 
 ## 显示模式 (View 菜单)
 
 - **Network**：双行显示上行 / 下行网络速度
 - **Memory**：双行显示 RAM 占用 GB + 百分比
 - **CPU/GPU**：双行显示 CPU / GPU 使用率
+- **Latency**：双行显示延迟 / 丢包+抖动（HEAD `www.gstatic.com/generate_204` 长连接）
 
 ## 数据采集
 
@@ -62,6 +64,15 @@ make help         # 查看所有命令
 - `IORegistryEntryCreateCFProperties` 读取 `PerformanceStatistics` 字典
 - key: `"Device Utilization %"`
 
+### 网络稳定性
+
+- 目标 `www.gstatic.com/generate_204`（同 OpenClash），NWConnection TLS 长连接
+- 每秒发送 HEAD 请求，仅测纯往返时间（排除 TCP/TLS 建连开销）
+- 超时 >5s 记为丢包
+- 抖动计算：最近 20 次有效采样的**平均绝对偏差（MAD）**
+- 丢包率：超时次数 / 总采样次数
+- 连接断开自动重建，断开当次不计入有效数据
+
 ### 定时器
 
 所有监控器使用 `DispatchSourceTimer`（替代 `Timer`）：
@@ -79,7 +90,7 @@ t.activate()
 
 ## 架构特点
 
-- **代理模式**：`MonitorNetworkDelegate`, `MonitorMemoryDelegate`, `MonitorCPUDelegate`, `MonitorGPUDelegate`
+- **代理模式**：`MonitorNetworkDelegate`, `MonitorMemoryDelegate`, `MonitorCPUDelegate`, `MonitorGPUDelegate`, `MonitorStabilityDelegate`
 - **线程**：各监控器独立 serial queue，UI 更新统一 `mainQueue()`
 - **无外部依赖**：纯 Apple SDK（Foundation, Network, Cocoa, IOKit）
 - **模式切换**：切模式自动停掉不需要的监控器，不浪费 CPU

@@ -1,23 +1,28 @@
 import Cocoa
 
-class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate, MonitorCPUDelegate, MonitorGPUDelegate, NSMenuDelegate {
+class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate, MonitorCPUDelegate, MonitorGPUDelegate, MonitorStabilityDelegate, NSMenuDelegate {
     private func stopAllMonitors() {
         networkMonitor.stopMonitoring()
         memoryMonitor.stopMonitoring()
         cpuMonitor.stopMonitoring()
         gpuMonitor.stopMonitoring()
+        stabilityMonitor.stopMonitoring()
     }
     private var statusBarItem: NSStatusItem?
     private let networkMonitor = MonitorNetwork()
     private let memoryMonitor = MonitorMemory()
     private let cpuMonitor = MonitorCPU()
     private let gpuMonitor = MonitorGPU()
+    private let stabilityMonitor = MonitorStability()
     private var currentUploadSpeed: Double = 0
     private var currentDownloadSpeed: Double = 0
     private var currentMemoryUsed: Double = 0
     private var currentMemoryPercent: Double = 0
     private var currentCPUPercent: Double = 0
     private var currentGPUPercent: Double = 0
+    private var currentLatency: Double = -2  // <0 = no data/timeout
+    private var currentLossRate: Double = 0
+    private var currentJitter: Double = 0
     private var currentDisplayMode: DisplayMode = .networkSpeed
 
     override init() {
@@ -59,6 +64,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         memoryMonitor.delegate = self
         cpuMonitor.delegate = self
         gpuMonitor.delegate = self
+        stabilityMonitor.delegate = self
     }
 
     private func applySettings() {
@@ -66,6 +72,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         currentUploadSpeed = 0; currentDownloadSpeed = 0
         currentMemoryUsed = 0; currentMemoryPercent = 0
         currentCPUPercent = 0; currentGPUPercent = 0
+        currentLatency = -2; currentLossRate = 0; currentJitter = 0
         switch currentDisplayMode {
         case .networkSpeed:
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
@@ -74,6 +81,8 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         case .systemUsage:
             cpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
             gpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
+        case .stability:
+            stabilityMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         }
     }
 
@@ -135,6 +144,9 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         case .systemUsage:
             top = "CPU\(formatCPUPercent(currentCPUPercent))"
             bottom = "GPU\(formatCPUPercent(currentGPUPercent))"
+        case .stability:
+            top = "Top: \(formatLatency(currentLatency))"
+            bottom = "✕\(formatLossRate(currentLossRate)) \(formatJitter(currentJitter))"
         }
 
         statusBarItem?.button?.image = renderImage(top: top, bottom: bottom)
@@ -167,6 +179,8 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
             return "iMoni\n\(top) (\(Int(round(currentMemoryPercent)))%)"
         case .systemUsage:
             return "iMoni\nCPU: \(Int(round(currentCPUPercent)))%\nGPU: \(Int(round(currentGPUPercent)))%"
+        case .stability:
+            return "iMoni\nhttps://www.gstatic.com/generate_204\n\(formatLatency(currentLatency))\n丢包 \(formatLossRate(currentLossRate))  抖动 \(formatJitter(currentJitter))"
         }
     }
 
@@ -175,6 +189,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
         currentUploadSpeed = uploadSpeed
         currentDownloadSpeed = downloadSpeed
+        NSLog("[Network] ↓ %@  ↑ %@", formatSpeed(downloadSpeed), formatSpeed(uploadSpeed))
         updateDisplay()
     }
 
@@ -189,6 +204,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     func memoryMonitor(_ monitor: MonitorMemory, didUpdateMemoryUsed usedGB: Double, percent: Double) {
         currentMemoryUsed = usedGB
         currentMemoryPercent = percent
+        NSLog("[Memory] %@  %@", formatMemoryGB(usedGB, percent: percent).top, formatMemoryGB(usedGB, percent: percent).bottom)
         updateDisplay()
     }
 
@@ -202,6 +218,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func cpuMonitor(_ monitor: MonitorCPU, didUpdateCPUUsage percent: Double) {
         currentCPUPercent = percent
+        NSLog("[CPU] CPU: %.1f%%", percent)
         updateDisplay()
     }
 
@@ -214,11 +231,29 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func gpuMonitor(_ monitor: MonitorGPU, didUpdateGPUUsage percent: Double) {
         currentGPUPercent = percent
+        NSLog("[GPU] GPU: %.1f%%", percent)
         updateDisplay()
     }
 
     func gpuMonitorDidFail(_ monitor: MonitorGPU) {
         currentGPUPercent = 0
+        updateDisplay()
+    }
+
+    // MARK: - MonitorStabilityDelegate
+
+    func stabilityMonitor(_ monitor: MonitorStability, didUpdateLatency latency: Double, lossRate: Double, jitter: Double) {
+        currentLatency = latency
+        currentLossRate = lossRate
+        currentJitter = jitter
+        NSLog("[Stability] Top: %.0fms  ✕%.1f%%  ±%.1fms", latency, lossRate * 100, jitter)
+        updateDisplay()
+    }
+
+    func stabilityMonitorDidFail(_ monitor: MonitorStability) {
+        currentLatency = -2
+        currentLossRate = 1.0
+        currentJitter = 0
         updateDisplay()
     }
 }

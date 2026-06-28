@@ -15,6 +15,7 @@
 		B2C3D4E5F6A7B8C9D0E1F2A3 /* MonitorCPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */; };
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* MonitorGPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */; };
 		F6A7B8C9D0E1F2A3B4C5D6E7 /* TimerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* TimerHelper.swift */; };
+		D4A5B6C7D8E9F0A1B2C3D4E5 /* MonitorStability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */; };
 		DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3CC934CE62FFFAF200C3C135 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -39,6 +40,7 @@
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorCPU.swift; sourceTree = "<group>"; };
 		C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorGPU.swift; sourceTree = "<group>"; };
 		E5F6A7B8C9D0E1F2A3B4C5D6 /* TimerHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerHelper.swift; sourceTree = "<group>"; };
+		7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorStability.swift; sourceTree = "<group>"; };
 		F60B6ABB8D8F37687EBA30B8 /* iMoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iMoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -56,6 +58,7 @@
 				A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */,
 				E5F6A7B8C9D0E1F2A3B4C5D6 /* TimerHelper.swift */,
+				7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */,
 			);
 			path = iMoni;
 			sourceTree = "<group>";
@@ -154,6 +157,7 @@
 				B2C3D4E5F6A7B8C9D0E1F2A3 /* MonitorCPU.swift in Sources */,
 				D4E5F6A7B8C9D0E1F2A3B4C5 /* MonitorGPU.swift in Sources */,
 				F6A7B8C9D0E1F2A3B4C5D6E7 /* TimerHelper.swift in Sources */,
+				D4A5B6C7D8E9F0A1B2C3D4E5 /* MonitorStability.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

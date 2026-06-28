@@ -4,6 +4,25 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.6.0] - 2026-06-29
+
+### 🚀 新增功能
+
+- **长连接测速**：MonitorStability 改为长连接模式，复用 TCP+TLS 连接，每秒只测 HEAD 请求往返时间
+- **调试日志**：所有监控模式添加 NSLog 调试日志输出（[Network]/[Memory]/[CPU]/[GPU]/[Stability]）
+
+### 🔧 优化改进
+
+- 测速方式从 GET 改为 HEAD，与服务端负载更友好
+- 目标地址从 `1.1.1.1:443` 改为同步 OpenClash 的 `www.gstatic.com/generate_204`
+- 网络框架从 POSIX select() 迁移至 Apple NWConnection
+- 连接断开自动重建，后续测量秒级恢复
+
+### 文件变更
+
+- 重写：`MonitorStability.swift` 120→160 行，持连接架构
+- 修改：`MenuBarController.swift` 添加 NSLog 调试日志
+
 ## [1.5.0] - 2026-06-22
 
 ### 🔨 精简重构

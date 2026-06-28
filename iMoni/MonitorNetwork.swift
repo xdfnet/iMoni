@@ -96,8 +96,9 @@ class MonitorNetwork {
         let linkRate = lastLinkRate > 0 ? lastLinkRate : 1000.0
         let intervalSec = max(self.interval, 0.5)
         let maxDelta = UInt64(linkRate * 1_000_000 / 8 * 1.5 * intervalSec)
-        if diffReceived > maxDelta { diffReceived = 0 }
-        if diffSent > maxDelta { diffSent = 0 }
+        // 超过阈值时等比例缩放，而非直接丢弃，防止高速传输被误杀
+        if diffReceived > maxDelta { diffReceived = maxDelta }
+        if diffSent > maxDelta { diffSent = maxDelta }
 
         let speedDown = Double(diffReceived) / elapsed / (1000.0 * 1000.0)
         let speedUp = Double(diffSent) / elapsed / (1000.0 * 1000.0)

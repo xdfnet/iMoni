@@ -6,6 +6,7 @@ enum DisplayMode: String, CaseIterable {
     case systemUsage = "CPU/GPU"
     case memoryUsage = "Memory"
     case networkSpeed = "Network"
+    case stability = "Latency"
 }
 
 enum MonitorConstants {
@@ -56,6 +57,23 @@ func formatMemoryGB(_ usedGB: Double, percent: Double) -> (top: String, bottom: 
     let used = Int(round(usedGB))
     let total = percent > 0 ? Int(round(usedGB / (percent / 100))) : 0
     return ("\(used)/\(total) GB", "PCT \(Int(round(percent)))%")
+}
+
+/// 格式化延迟，"23ms"（≥0）；"----"（无数据/超时）
+func formatLatency(_ ms: Double) -> String {
+    if ms < 0 { return "----" }
+    if ms < 100 { return String(format: "%.1fms", ms) }
+    return String(format: "%.0fms", ms)
+}
+
+/// 抖动，"±3ms"
+func formatJitter(_ ms: Double) -> String {
+    String(format: "±%.1fms", ms)
+}
+
+/// 丢包率，"0%"
+func formatLossRate(_ rate: Double) -> String {
+    String(format: "%.1f%%", rate * 100)
 }
 
 func mainQueue(_ block: @escaping () -> Void) {
