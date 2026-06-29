@@ -22,7 +22,7 @@ class MonitorStability {
     private let timer = TimerHelper()
     private let connQueue = DispatchQueue(label: "com.imoni.stability.conn", qos: .utility)
 
-    private let targetHost = "www.gstatic.com"
+    private let targetHost = "www.google.com"
     private let targetPort: UInt16 = 443
     private let connectTimeout: TimeInterval = 5.0
     private let maxSamples = 20
@@ -102,7 +102,7 @@ class MonitorStability {
         let sem = DispatchSemaphore(value: 0)
         var success = false
 
-        let request = "HEAD /generate_204 HTTP/1.1\r\nHost: \(targetHost)\r\nConnection: keep-alive\r\nUser-Agent: iMoni\r\n\r\n"
+        let request = "HEAD / HTTP/1.1\r\nHost: \(targetHost)\r\nConnection: keep-alive\r\nUser-Agent: iMoni\r\n\r\n"
         conn.send(content: request.data(using: .utf8), completion: .idempotent)
         conn.receive(minimumIncompleteLength: 1, maximumLength: 4096) { data, _, _, error in
             if data != nil {

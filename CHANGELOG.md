@@ -4,6 +4,17 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.7.0] - 2026-06-29
+
+### 🔧 优化改进
+
+- **测速目标调整**：Latency 模式从 `www.gstatic.com` 改为 `www.google.com`，更真实反映海外访问状况
+- 路由器 OpenClash 关闭时 Google 不可达，Latency 正确显示丢包；开启时正常测速
+
+### 文件变更
+
+- 修改：`MonitorStability.swift` 目标地址和请求路径
+
 ## [1.6.0] - 2026-06-29
 
 ### 🚀 新增功能

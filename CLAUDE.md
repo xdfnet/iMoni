@@ -28,14 +28,14 @@ make help         # 查看所有命令
 | `MonitorMemory.swift` | ~100 | 物理内存监控，host_statistics64(HOST_VM_INFO64) |
 | `MonitorCPU.swift` | ~95 | CPU 占用率，host_processor_info() 逐核采集 |
 | `MonitorGPU.swift` | ~100 | GPU 占用率，IOKit IOAccelerator Device Utilization % |
-| `MonitorStability.swift` | ~160 | 网络稳定性监控，HEAD `www.gstatic.com/generate_204` 长连接，追踪延迟/抖动/丢包率 |
+| `MonitorStability.swift` | ~160 | 网络稳定性监控，HEAD `www.google.com` 长连接，追踪延迟/抖动/丢包率 |
 
 ## 显示模式 (View 菜单)
 
 - **Network**：双行显示上行 / 下行网络速度
 - **Memory**：双行显示 RAM 占用 GB + 百分比
 - **CPU/GPU**：双行显示 CPU / GPU 使用率
-- **Latency**：双行显示延迟 / 丢包+抖动（HEAD `www.gstatic.com/generate_204` 长连接）
+- **Latency**：双行显示延迟 / 丢包+抖动（HEAD `www.google.com` 长连接）
 
 ## 数据采集
 
@@ -66,7 +66,7 @@ make help         # 查看所有命令
 
 ### 网络稳定性
 
-- 目标 `www.gstatic.com/generate_204`（同 OpenClash），NWConnection TLS 长连接
+- 目标 `www.google.com`，NWConnection TLS 长连接
 - 每秒发送 HEAD 请求，仅测纯往返时间（排除 TCP/TLS 建连开销）
 - 超时 >5s 记为丢包
 - 抖动计算：最近 20 次有效采样的**平均绝对偏差（MAD）**

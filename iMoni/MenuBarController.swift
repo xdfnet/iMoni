@@ -180,7 +180,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         case .systemUsage:
             return "iMoni\nCPU: \(Int(round(currentCPUPercent)))%\nGPU: \(Int(round(currentGPUPercent)))%"
         case .stability:
-            return "iMoni\nhttps://www.gstatic.com/generate_204\n\(formatLatency(currentLatency))\n丢包 \(formatLossRate(currentLossRate))  抖动 \(formatJitter(currentJitter))"
+            return "iMoni\nhttps://www.google.com\n\(formatLatency(currentLatency))\n丢包 \(formatLossRate(currentLossRate))  抖动 \(formatJitter(currentJitter))"
         }
     }
 

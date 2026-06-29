@@ -18,7 +18,7 @@ iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控网络�
 | **Network** | 网络上行 / 下行实时速率 | `getifaddrs()` 字节差值 |
 | **Memory** | 物理内存占用 GB + 百分比 | `host_statistics64` + `host_info` |
 | **CPU/GPU** | CPU / GPU 使用率百分比 | `host_processor_info` + IOKit `IOAccelerator` |
-| **Latency** | 网络延迟 / 丢包 + 抖动 | HEAD `www.gstatic.com/generate_204` 长连接 |
+| **Latency** | 网络延迟 / 丢包 + 抖动 | HEAD `www.google.com` 长连接 |
 
 ### 特点
 
@@ -75,7 +75,7 @@ iMoni/
 | 物理内存 | `host_statistics64(HOST_VM_INFO64)` + `host_info(HOST_BASIC_INFO)` | Mach API |
 | CPU 使用率 | `host_processor_info(PROCESSOR_CPU_LOAD_INFO)` 逐核采集 | Mach API |
 | GPU 使用率 | `IOServiceGetMatchingServices("IOAccelerator")` | IOKit |
-| 网络稳定性 | HEAD `www.gstatic.com/generate_204` 长连接 | NWConnection |
+| 网络稳定性 | HEAD `www.google.com` 长连接 | NWConnection |
 
 ### 调度
 
@@ -97,6 +97,7 @@ make clean     # 清理
 
 ## 版本历史
 
+- **v1.7.0** (2026-06-29): Latency 模式改用 `www.google.com` 测速，准确反映海外可达性
 - **v1.6.0** (2026-06-28): 新增 Latency 模式，TCP ping www.gstatic.com 实时监控网络延迟/抖动/丢包率
 - **v1.5.0** (2026-06-22): 移除 Latency 模式，精简至 7 源文件；统一数据模式；代码规范优化
 - **v1.3.2** (2026-06-11): 统一采集方式对齐 Stats；修复内存单位混用；全部改用 DispatchSourceTimer
