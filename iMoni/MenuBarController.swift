@@ -14,16 +14,19 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     private let cpuMonitor = MonitorCPU()
     private let gpuMonitor = MonitorGPU()
     private let stabilityMonitor = MonitorStability()
-    private var currentUploadSpeed: Double = 0
-    private var currentDownloadSpeed: Double = 0
+    private var currentUploadSpeed: Int64 = 0
+    private var currentDownloadSpeed: Int64 = 0
     private var currentMemoryUsed: Double = 0
     private var currentMemoryPercent: Double = 0
     private var currentCPUPercent: Double = 0
     private var currentGPUPercent: Double = 0
+    private var currentCPUAvailable = false
+    private var currentGPUAvailable = false
     private var currentLatency: Double = -2  // <0 = no data/timeout
     private var currentLossRate: Double = 0
     private var currentJitter: Double = 0
     private var currentDisplayMode: DisplayMode = .networkSpeed
+    private let menuBarView = MenuBarView()
 
     override init() {
         super.init()
@@ -57,6 +60,16 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         let menu = NSMenu()
         menu.delegate = self
         statusBarItem?.menu = menu
+
+        guard let button = statusBarItem?.button else { return }
+        let h = button.bounds.height
+        menuBarView.frame = CGRect(x: 0, y: 2, width: 50, height: h - 4)
+        button.addSubview(menuBarView)
+        button.image = NSImage()
+
+        menuBarView.onWidthChange = { [weak self] width in
+            self?.statusBarItem?.length = width
+        }
     }
 
     private func setupMonitors() {
@@ -72,13 +85,15 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         currentUploadSpeed = 0; currentDownloadSpeed = 0
         currentMemoryUsed = 0; currentMemoryPercent = 0
         currentCPUPercent = 0; currentGPUPercent = 0
+        currentCPUAvailable = false; currentGPUAvailable = false
         currentLatency = -2; currentLossRate = 0; currentJitter = 0
+        menuBarView.resetMaxWidth()
         switch currentDisplayMode {
         case .networkSpeed:
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .memoryUsage:
             memoryMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
-        case .systemUsage:
+        case .cpuUsage, .gpuUsage:
             cpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
             gpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .stability:
@@ -137,48 +152,40 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
         switch currentDisplayMode {
         case .networkSpeed:
-            top = formatSpeed(currentDownloadSpeed)
-            bottom = formatSpeed(currentUploadSpeed)
+            top = "NET"
+            bottom = formatSpeed(currentDownloadSpeed)
         case .memoryUsage:
             (top, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
-        case .systemUsage:
-            top = "CPU\(formatCPUPercent(currentCPUPercent))"
-            bottom = "GPU\(formatCPUPercent(currentGPUPercent))"
+        case .cpuUsage:
+            top = "CPU"
+            bottom = currentCPUAvailable ? formatCPUPercent(currentCPUPercent) : "--%"
+        case .gpuUsage:
+            top = "GPU"
+            bottom = currentGPUAvailable ? formatCPUPercent(currentGPUPercent) : "--%"
         case .stability:
-            top = "Top: \(formatLatency(currentLatency))"
-            bottom = "✕\(formatLossRate(currentLossRate)) \(formatJitter(currentJitter))"
+            top = "RTT"
+            bottom = formatLatency(currentLatency)
         }
 
-        statusBarItem?.button?.image = renderImage(top: top, bottom: bottom)
-        statusBarItem?.button?.toolTip = tooltipText
-    }
-
-    private func renderImage(top: String, bottom: String) -> NSImage {
-        let font = NSFont.monospacedSystemFont(ofSize: 9, weight: .light)
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.labelColor]
-
-        let topSize = (top as NSString).size(withAttributes: attrs)
-        let bottomSize = (bottom as NSString).size(withAttributes: attrs)
-        let width = max(topSize.width, bottomSize.width) + 6
-        let height = NSStatusBar.system.thickness
-
-        return NSImage(size: NSSize(width: width, height: height), flipped: false) { _ in
-            let halfH = height / 2
-            (top as NSString).draw(at: NSPoint(x: width - topSize.width - 2, y: halfH + (halfH - topSize.height) / 2), withAttributes: attrs)
-            (bottom as NSString).draw(at: NSPoint(x: width - bottomSize.width - 2, y: (halfH - bottomSize.height) / 2), withAttributes: attrs)
-            return true
+        mainQueue { [weak self] in
+            guard let self else { return }
+            self.menuBarView.updateText(top: top, bottom: bottom)
+            self.statusBarItem?.button?.toolTip = self.tooltipText
         }
     }
 
     private var tooltipText: String {
         switch currentDisplayMode {
         case .networkSpeed:
-            return "iMoni\n↓ \(formatSpeed(currentDownloadSpeed))\n↑ \(formatSpeed(currentUploadSpeed))"
+            return "iMoni\n↑ \(formatSpeed(currentUploadSpeed))\n↓ \(formatSpeed(currentDownloadSpeed))"
         case .memoryUsage:
-            let (top, _) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
-            return "iMoni\n\(top) (\(Int(round(currentMemoryPercent)))%)"
-        case .systemUsage:
-            return "iMoni\nCPU: \(Int(round(currentCPUPercent)))%\nGPU: \(Int(round(currentGPUPercent)))%"
+            let (_, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
+            let pct = Int(round(currentMemoryPercent))
+            return "iMoni\n\(bottom) (\(pct)%)"
+        case .cpuUsage, .gpuUsage:
+            let cpu = currentCPUAvailable ? "\(Int(round(currentCPUPercent)))%" : "---"
+            let gpu = currentGPUAvailable ? "\(Int(round(currentGPUPercent)))%" : "---"
+            return "iMoni\nCPU: \(cpu)\nGPU: \(gpu)"
         case .stability:
             return "iMoni\nhttps://www.google.com\n\(formatLatency(currentLatency))\n丢包 \(formatLossRate(currentLossRate))  抖动 \(formatJitter(currentJitter))"
         }
@@ -186,7 +193,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     // MARK: - MonitorNetworkDelegate
 
-    func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double) {
+    func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Int64, downloadSpeed: Int64) {
         currentUploadSpeed = uploadSpeed
         currentDownloadSpeed = downloadSpeed
         NSLog("[Network] ↓ %@  ↑ %@", formatSpeed(downloadSpeed), formatSpeed(uploadSpeed))
@@ -218,6 +225,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func cpuMonitor(_ monitor: MonitorCPU, didUpdateCPUUsage percent: Double) {
         currentCPUPercent = percent
+        currentCPUAvailable = true
         NSLog("[CPU] CPU: %.1f%%", percent)
         updateDisplay()
     }
@@ -231,6 +239,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func gpuMonitor(_ monitor: MonitorGPU, didUpdateGPUUsage percent: Double) {
         currentGPUPercent = percent
+        currentGPUAvailable = true
         NSLog("[GPU] GPU: %.1f%%", percent)
         updateDisplay()
     }
@@ -255,5 +264,61 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         currentLossRate = 1.0
         currentJitter = 0
         updateDisplay()
+    }
+}
+
+// MARK: - MenuBarView
+
+class MenuBarView: NSView {
+    var topText = "" { didSet { needsDisplay = true } }
+    var bottomText = "" { didSet { needsDisplay = true } }
+    var onWidthChange: ((CGFloat) -> Void)?
+
+    private var maxWidth: CGFloat = 0
+
+    func resetMaxWidth() { maxWidth = 0 }
+
+    func updateText(top: String, bottom: String) {
+        topText = top
+        bottomText = bottom
+        resizeToFit()
+        needsDisplay = true
+    }
+
+    private func resizeToFit() {
+        let rightStyle = NSMutableParagraphStyle()
+        rightStyle.alignment = .right
+        let topSize = (topText as NSString).size(
+            withAttributes: [.font: NSFont.systemFont(ofSize: 7, weight: .light), .paragraphStyle: rightStyle])
+        let bottomSize = (bottomText as NSString).size(
+            withAttributes: [.font: NSFont.systemFont(ofSize: 12, weight: .regular), .paragraphStyle: rightStyle])
+        let rawWidth = max(topSize.width, bottomSize.width) + 6
+        if rawWidth > maxWidth { maxWidth = rawWidth }
+        let newWidth = ceil(maxWidth / 5) * 5
+        if abs(newWidth - frame.width) > 0.5 {
+            setFrameSize(NSSize(width: newWidth, height: frame.height))
+            onWidthChange?(newWidth)
+        }
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let rightStyle = NSMutableParagraphStyle()
+        rightStyle.alignment = .right
+        let topAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 7, weight: .light),
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: rightStyle
+        ]
+        let bottomAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .regular),
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: rightStyle
+        ]
+
+        let topRect = CGRect(x: 0, y: 12, width: bounds.width - 4, height: 7)
+        (topText as NSString).draw(in: topRect, withAttributes: topAttrs)
+
+        let bottomRect = CGRect(x: 0, y: 1, width: bounds.width - 4, height: 13)
+        (bottomText as NSString).draw(in: bottomRect, withAttributes: bottomAttrs)
     }
 }

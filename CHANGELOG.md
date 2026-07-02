@@ -4,6 +4,28 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.8.0] - 2026-07-02
+
+### 🚀 新增功能
+
+- **CPU/GPU 拆分**：原 CPU/GPU 合并模式拆分为独立 CPU、GPU 两个模式，各自单独显示
+- **统一模板**：5 种模式全部采用「3 字母标题 + 数值」双行格式（CPU / GPU / MEM / NET / RTT）
+- **对齐 Stats 渲染**：从 NSImage 位图渲染迁移至 NSView + `draw(_:)` 方式，与 Stats Mini 完全一致
+
+### 🔧 优化改进
+
+- **右对齐 + 固定宽度**：右对齐排版，宽度只扩不缩，模式切换时重置
+- **速度单位改为 bytes/s**：MonitorNetwork 产出从 MB/s Double 改为 bytes/s Int64，支持更精确格式化
+- **Network 标题**：`Net` → `NET`
+- **Latency 标题**：`Ping` → `RTT`
+- **Memory 格式**：上行改为 `MEM` 标题，下行 `8/16 GB`
+
+### 文件变更
+
+- 修改：`Core.swift` — DisplayMode 顺序调整，formatMemoryGB 返回格式
+- 修改：`MenuBarController.swift` — 新增 MenuBarView 类，移除 renderImage，UI 更新走 mainQueue
+- 修改：`MonitorNetwork.swift` — delegate 改为 Int64，计算 bytes/s
+
 ## [1.7.0] - 2026-06-29
 
 ### 🔧 优化改进

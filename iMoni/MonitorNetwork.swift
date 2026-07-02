@@ -1,7 +1,7 @@
 import Foundation
 
 protocol MonitorNetworkDelegate: AnyObject {
-    func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Double, downloadSpeed: Double)
+    func networkMonitor(_ monitor: MonitorNetwork, didUpdateSpeed uploadSpeed: Int64, downloadSpeed: Int64)
     func networkMonitorDidFail(_ monitor: MonitorNetwork)
 }
 
@@ -100,8 +100,8 @@ class MonitorNetwork {
         if diffReceived > maxDelta { diffReceived = maxDelta }
         if diffSent > maxDelta { diffSent = maxDelta }
 
-        let speedDown = Double(diffReceived) / elapsed / (1000.0 * 1000.0)
-        let speedUp = Double(diffSent) / elapsed / (1000.0 * 1000.0)
+        let speedDown = Int64(Double(diffReceived) / elapsed)
+        let speedUp = Int64(Double(diffSent) / elapsed)
 
         lastUpdateTime = now
 

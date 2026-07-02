@@ -11,13 +11,14 @@ iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控网络�
 
 ## 特性
 
-### 4 种显示模式
+### 5 种显示模式
 
 | 模式 | 内容 | 技术 |
 |------|------|------|
-| **Network** | 网络上行 / 下行实时速率 | `getifaddrs()` 字节差值 |
-| **Memory** | 物理内存占用 GB + 百分比 | `host_statistics64` + `host_info` |
-| **CPU/GPU** | CPU / GPU 使用率百分比 | `host_processor_info` + IOKit `IOAccelerator` |
+| **CPU** | CPU 使用率 | `host_processor_info()` 逐核 ticks 差值 |
+| **GPU** | GPU 使用率 | IOKit `IOAccelerator` |
+| **Memory** | 物理内存占用 | `host_statistics64` + `host_info` |
+| **Network** | 下行实时速率 | `getifaddrs()` 字节差值 |
 | **Latency** | 网络延迟 / 丢包 + 抖动 | HEAD `www.google.com` 长连接 |
 
 ### 特点
@@ -45,7 +46,7 @@ make install   # 构建 Release 并安装到 /Applications
 
 启动后出现在菜单栏，点击弹出菜单：
 
-- **View** → 切换 4 种显示模式
+- **View** → 切换 5 种显示模式
 - **Quit** → 退出应用
 
 ## 项目结构
@@ -83,7 +84,7 @@ iMoni/
 
 ### 渲染
 
-`NSStatusItem.button.image` 双行 `NSImage` 手绘文本，9pt monospaced 字体。
+`MenuBarView: NSView` 子类 `draw(_:)` 渲染，7pt Light 标签 + 12pt Regular 数值双行显示，非翻转坐标系。
 
 ## 构建命令
 
@@ -97,6 +98,7 @@ make clean     # 清理
 
 ## 版本历史
 
+- **v1.8.0** (2026-07-02): CPU/GPU 拆分为独立模式；统一 3 字母标题模板；改用 NSView 渲染对齐 Stats；Network 速度单位改为 bytes/s
 - **v1.7.0** (2026-06-29): Latency 模式改用 `www.google.com` 测速，准确反映海外可达性
 - **v1.6.0** (2026-06-28): 新增 Latency 模式，TCP ping www.gstatic.com 实时监控网络延迟/抖动/丢包率
 - **v1.5.0** (2026-06-22): 移除 Latency 模式，精简至 7 源文件；统一数据模式；代码规范优化

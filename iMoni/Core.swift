@@ -3,7 +3,8 @@ import Foundation
 // MARK: - Enums
 
 enum DisplayMode: String, CaseIterable {
-    case systemUsage = "CPU/GPU"
+    case cpuUsage = "CPU"
+    case gpuUsage = "GPU"
     case memoryUsage = "Memory"
     case networkSpeed = "Network"
     case stability = "Latency"
@@ -30,21 +31,22 @@ extension UserDefaults {
 
 // MARK: - Formatting & Dispatch
 
-/// 格式化网络速度，接收 **每秒兆字节数（MB/s）**，输出人类可读字符串（B/s ~ GB/s）。
-/// 内部还原为 B/s 后做 1000 进制转换（网络单位传统十进制）。
-/// - Parameter speedMBs: 以 MB/s 为单位的速度值（MonitorNetwork 产出）
-func formatSpeed(_ speedMBs: Double) -> String {
-    let units = ["B/s", "KB/s", "MB/s", "GB/s"]
-    var value = speedMBs * 1000 * 1000  // MB/s → B/s
-    var unitIndex = 0
-    while value >= 1000 && unitIndex < units.count - 1 {
-        value /= 1000
-        unitIndex += 1
+/// 格式化网络速度，接收 **每秒字节数（bytes/s）**，输出人类可读字符串（KB/s ~ GB/s）。
+/// 1000 进制（网络单位传统十进制），整数与 1 位小数按值切换。
+/// - Parameter bytes: 以 bytes/s 为单位的速度值（MonitorNetwork 产出）
+func formatSpeed(_ bytes: Int64) -> String {
+    switch bytes {
+    case 0:
+        return "0 KB/s"
+    case 1..<1_000_000: // 1 B/s ~ 999,999 B/s → 整数 KB/s
+        return "\(bytes / 1_000) KB/s"
+    case 1_000_000..<100_000_000: // 1 ~ 99.9 MB/s → 1 位小数
+        return String(format: "%.1f MB/s", Double(bytes) / 1_000_000)
+    case 100_000_000..<1_000_000_000: // 100 ~ 999 MB/s → 整数
+        return "\(bytes / 1_000_000) MB/s"
+    default: // ≥ 1 GB/s → 1 位小数
+        return String(format: "%.1f GB/s", Double(bytes) / 1_000_000_000)
     }
-    if unitIndex == 0 {
-        return "\(Int(value)) \(units[unitIndex])"
-    }
-    return String(format: "%.1f %@", value, units[unitIndex])
 }
 
 /// 格式化 CPU/GPU 使用率（如 "CPU 50%"），宽度固定 3 位数字
@@ -55,8 +57,9 @@ func formatCPUPercent(_ percent: Double) -> String {
 /// 格式化内存用量，返回 (显示文本, 百分比文本)
 func formatMemoryGB(_ usedGB: Double, percent: Double) -> (top: String, bottom: String) {
     let used = Int(round(usedGB))
-    let total = percent > 0 ? Int(round(usedGB / (percent / 100))) : 0
-    return ("\(used)/\(total) GB", "PCT \(Int(round(percent)))%")
+    guard percent > 0 else { return ("MEM", "---") }
+    let total = Int(round(usedGB / (percent / 100)))
+    return ("MEM", "\(used)/\(total) GB")
 }
 
 /// 格式化延迟，"23ms"（≥0）；"----"（无数据/超时）
