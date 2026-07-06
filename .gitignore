@@ -129,3 +129,6 @@ Temporary Items
 # Icon generation scripts
 generate_icons.sh
 Moni/icon_concept*.svg
+
+# Local AI/assistant data
+.qwen/
