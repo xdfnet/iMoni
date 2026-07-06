@@ -94,7 +94,7 @@ class MonitorStability {
         // 连接挂了就重连，本次不计入有效数据
         guard let conn = persistentConn, connReady else {
             connect()
-            recordResult(success: false, elapsedMs: -1)
+            // 不回调：避免首屏 0.0ms 被 -1 覆盖成 ----
             return
         }
 

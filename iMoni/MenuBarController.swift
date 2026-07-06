@@ -22,7 +22,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     private var currentGPUPercent: Double = 0
     private var currentCPUAvailable = false
     private var currentGPUAvailable = false
-    private var currentLatency: Double = -2  // <0 = no data/timeout
+    private var currentLatency: Double = 0  // 默认 0，fail 时设 -2
     private var currentLossRate: Double = 0
     private var currentJitter: Double = 0
     private var currentDisplayMode: DisplayMode = .networkSpeed
@@ -85,8 +85,8 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
         currentUploadSpeed = 0; currentDownloadSpeed = 0
         currentMemoryUsed = 0; currentMemoryPercent = 0
         currentCPUPercent = 0; currentGPUPercent = 0
-        currentCPUAvailable = false; currentGPUAvailable = false
-        currentLatency = -2; currentLossRate = 0; currentJitter = 0
+        currentCPUAvailable = true; currentGPUAvailable = true
+        currentLatency = 0; currentLossRate = 0; currentJitter = 0
         menuBarView.resetMaxWidth()
         switch currentDisplayMode {
         case .networkSpeed:
@@ -231,6 +231,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func cpuMonitorDidFail(_ monitor: MonitorCPU) {
         currentCPUPercent = 0
+        currentCPUAvailable = false
         updateDisplay()
     }
 
@@ -245,6 +246,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func gpuMonitorDidFail(_ monitor: MonitorGPU) {
         currentGPUPercent = 0
+        currentGPUAvailable = false
         updateDisplay()
     }
 

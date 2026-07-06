@@ -56,14 +56,14 @@ func formatCPUPercent(_ percent: Double) -> String {
 /// 格式化内存用量，返回 (显示文本, 百分比文本)
 func formatMemoryGB(_ usedGB: Double, percent: Double) -> (top: String, bottom: String) {
     let used = Int(round(usedGB))
-    guard percent > 0 else { return ("RAM", "---") }
+    guard percent > 0 else { return ("RAM", "0 GB") }
     let total = Int(round(usedGB / (percent / 100)))
     return ("RAM", "\(used)/\(total) GB")
 }
 
-/// 格式化延迟，"23ms"（≥0）；"----"（无数据/超时）
+/// 格式化延迟，"23ms"（≥0）；"--ms"（无数据/超时）
 func formatLatency(_ ms: Double) -> String {
-    if ms < 0 { return "----" }
+    if ms < 0 { return "--ms" }
     if ms < 100 { return String(format: "%.1fms", ms) }
     return String(format: "%.0fms", ms)
 }
