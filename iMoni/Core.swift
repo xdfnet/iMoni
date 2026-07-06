@@ -3,8 +3,7 @@ import Foundation
 // MARK: - Enums
 
 enum DisplayMode: String, CaseIterable {
-    case cpuUsage = "CPU"
-    case gpuUsage = "GPU"
+    case cpuGpu = "CPU/GPU"
     case memoryUsage = "Memory"
     case networkSpeed = "Network"
     case stability = "Latency"
@@ -49,17 +48,17 @@ func formatSpeed(_ bytes: Int64) -> String {
     }
 }
 
-/// 格式化 CPU/GPU 使用率（如 "CPU 50%"），宽度固定 3 位数字
+/// 格式化 CPU/GPU 使用率（如 "50%"），四舍五入为整数
 func formatCPUPercent(_ percent: Double) -> String {
-    String(format: "%3d%%", Int(round(percent)))
+    "\(Int(round(percent)))%"
 }
 
 /// 格式化内存用量，返回 (显示文本, 百分比文本)
 func formatMemoryGB(_ usedGB: Double, percent: Double) -> (top: String, bottom: String) {
     let used = Int(round(usedGB))
-    guard percent > 0 else { return ("MEM", "---") }
+    guard percent > 0 else { return ("RAM", "---") }
     let total = Int(round(usedGB / (percent / 100)))
-    return ("MEM", "\(used)/\(total) GB")
+    return ("RAM", "\(used)/\(total) GB")
 }
 
 /// 格式化延迟，"23ms"（≥0）；"----"（无数据/超时）

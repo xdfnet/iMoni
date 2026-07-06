@@ -11,12 +11,11 @@ iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控网络�
 
 ## 特性
 
-### 5 种显示模式
+### 4 种显示模式
 
 | 模式 | 内容 | 技术 |
 |------|------|------|
-| **CPU** | CPU 使用率 | `host_processor_info()` 逐核 ticks 差值 |
-| **GPU** | GPU 使用率 | IOKit `IOAccelerator` |
+| **CPU/GPU** | CPU + GPU 使用率 | `host_processor_info()` + IOKit `IOAccelerator` |
 | **Memory** | 物理内存占用 | `host_statistics64` + `host_info` |
 | **Network** | 下行实时速率 | `getifaddrs()` 字节差值 |
 | **Latency** | 网络延迟 / 丢包 + 抖动 | HEAD `www.google.com` 长连接 |
@@ -46,7 +45,7 @@ make install   # 构建 Release 并安装到 /Applications
 
 启动后出现在菜单栏，点击弹出菜单：
 
-- **View** → 切换 5 种显示模式
+- **View** → 切换 4 种显示模式
 - **Quit** → 退出应用
 
 ## 项目结构

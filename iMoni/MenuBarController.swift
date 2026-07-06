@@ -93,7 +93,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
             networkMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .memoryUsage:
             memoryMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
-        case .cpuUsage, .gpuUsage:
+        case .cpuGpu:
             cpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
             gpuMonitor.startMonitoring(interval: MonitorConstants.defaultInterval)
         case .stability:
@@ -156,12 +156,11 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
             bottom = formatSpeed(currentDownloadSpeed)
         case .memoryUsage:
             (top, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
-        case .cpuUsage:
-            top = "CPU"
-            bottom = currentCPUAvailable ? formatCPUPercent(currentCPUPercent) : "--%"
-        case .gpuUsage:
-            top = "GPU"
-            bottom = currentGPUAvailable ? formatCPUPercent(currentGPUPercent) : "--%"
+        case .cpuGpu:
+            top = "CPU/GPU"
+            let cpuStr = currentCPUAvailable ? formatCPUPercent(currentCPUPercent) : "--%"
+            let gpuStr = currentGPUAvailable ? formatCPUPercent(currentGPUPercent) : "--%"
+            bottom = "\(cpuStr) \(gpuStr)"
         case .stability:
             top = "RTT"
             bottom = formatLatency(currentLatency)
@@ -182,7 +181,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
             let (_, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
             let pct = Int(round(currentMemoryPercent))
             return "iMoni\n\(bottom) (\(pct)%)"
-        case .cpuUsage, .gpuUsage:
+        case .cpuGpu:
             let cpu = currentCPUAvailable ? "\(Int(round(currentCPUPercent)))%" : "---"
             let gpu = currentGPUAvailable ? "\(Int(round(currentGPUPercent)))%" : "---"
             return "iMoni\nCPU: \(cpu)\nGPU: \(gpu)"

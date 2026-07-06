@@ -4,6 +4,14 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 规范。
 
+## [Unreleased]
+
+### 🔧 优化改进
+
+- **内存标签**：MEM → RAM
+- **CPU/GPU 合并**：CPU、GPU 拆分为独立模式后重新合并为 CPU/GPU 模式，双值同屏显示
+- **精简为 4 种模式**：CPU/GPU / Memory / Network / Latency
+
 ## [1.8.0] - 2026-07-02
 
 ### 🚀 新增功能

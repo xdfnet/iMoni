@@ -32,9 +32,9 @@ make help         # 查看所有命令
 
 ## 显示模式 (View 菜单)
 
+- **CPU/GPU**：双行显示 CPU / GPU 使用率
 - **Network**：双行显示上行 / 下行网络速度
 - **Memory**：双行显示 RAM 占用 GB + 百分比
-- **CPU/GPU**：双行显示 CPU / GPU 使用率
 - **Latency**：双行显示延迟 / 丢包+抖动（HEAD `www.google.com` 长连接）
 
 ## 数据采集
