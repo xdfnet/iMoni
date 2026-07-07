@@ -31,6 +31,8 @@ class MonitorStability {
     private var isRunning = false
     private var persistentConn: NWConnection?
     private var connReady = false
+    private var hasValidSample = false
+    private var monitoringStartedAt: Date?
 
     deinit {
         stopMonitoring()
@@ -40,6 +42,8 @@ class MonitorStability {
         guard !isRunning else { return }
         isRunning = true
         history.removeAll()
+        hasValidSample = false
+        monitoringStartedAt = Date()
         connect()
         timer.start(queue: queue, interval: interval) { [weak self] in
             self?.measure()
@@ -94,7 +98,10 @@ class MonitorStability {
         // 连接挂了就重连，本次不计入有效数据
         guard let conn = persistentConn, connReady else {
             connect()
-            // 不回调：避免首屏 0.0ms 被 -1 覆盖成 ----
+            let graceExpired = Date().timeIntervalSince(monitoringStartedAt ?? Date()) > connectTimeout
+            if hasValidSample || graceExpired {
+                recordResult(success: false, elapsedMs: -1)
+            }
             return
         }
 
@@ -125,6 +132,7 @@ class MonitorStability {
     }
 
     private func recordResult(success: Bool, elapsedMs: Double) {
+        if success { hasValidSample = true }
         history.append(success ? elapsedMs : -1)
         if history.count > maxSamples {
             history.removeFirst()

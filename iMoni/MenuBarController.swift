@@ -20,8 +20,8 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
     private var currentMemoryPercent: Double = 0
     private var currentCPUPercent: Double = 0
     private var currentGPUPercent: Double = 0
-    private var currentCPUAvailable = false
-    private var currentGPUAvailable = false
+    private var currentCPUAvailable = true
+    private var currentGPUAvailable = true
     private var currentLatency: Double = 0  // 默认 0，fail 时设 -2
     private var currentLossRate: Double = 0
     private var currentJitter: Double = 0
@@ -179,11 +179,12 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
             return "iMoni\n↑ \(formatSpeed(currentUploadSpeed))\n↓ \(formatSpeed(currentDownloadSpeed))"
         case .memoryUsage:
             let (_, bottom) = formatMemoryGB(currentMemoryUsed, percent: currentMemoryPercent)
+            if currentMemoryPercent < 0 { return "iMoni\n\(bottom)" }
             let pct = Int(round(currentMemoryPercent))
             return "iMoni\n\(bottom) (\(pct)%)"
         case .cpuGpu:
-            let cpu = currentCPUAvailable ? "\(Int(round(currentCPUPercent)))%" : "---"
-            let gpu = currentGPUAvailable ? "\(Int(round(currentGPUPercent)))%" : "---"
+            let cpu = currentCPUAvailable ? "\(Int(round(currentCPUPercent)))%" : "--%"
+            let gpu = currentGPUAvailable ? "\(Int(round(currentGPUPercent)))%" : "--%"
             return "iMoni\nCPU: \(cpu)\nGPU: \(gpu)"
         case .stability:
             return "iMoni\nhttps://www.google.com\n\(formatLatency(currentLatency))\n丢包 \(formatLossRate(currentLossRate))  抖动 \(formatJitter(currentJitter))"
@@ -216,7 +217,7 @@ class MenuBarController: NSObject, MonitorNetworkDelegate, MonitorMemoryDelegate
 
     func memoryMonitorDidFail(_ monitor: MonitorMemory) {
         currentMemoryUsed = 0
-        currentMemoryPercent = 0
+        currentMemoryPercent = -1
         updateDisplay()
     }
 

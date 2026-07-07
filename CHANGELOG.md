@@ -11,7 +11,8 @@
 - **内存标签**：MEM → RAM
 - **CPU/GPU 合并**：CPU、GPU 拆分为独立模式后重新合并为 CPU/GPU 模式，双值同屏显示
 - **精简为 4 种模式**：CPU/GPU / Memory / Network / Latency
-- **首屏统一为 0**：CPU/GPU/Latency/Memory 默认值改为 0，去掉 `--%`/`---`/`----` 等待态；fail 仍显示 `--`
+- **首屏统一为 0**：CPU/GPU/Latency/Memory 默认值改为 0，去掉 `--%`/`---`/`----` 等待态；fail 显示 `--%`/`-- GB`/`--ms`
+- **Latency 连接宽限期**：首屏 5s 内不回调失败；超时或曾成功采样后断连则显示 `--ms`
 
 ## [1.8.0] - 2026-07-02
 

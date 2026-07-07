@@ -55,6 +55,7 @@ func formatCPUPercent(_ percent: Double) -> String {
 
 /// 格式化内存用量，返回 (显示文本, 百分比文本)
 func formatMemoryGB(_ usedGB: Double, percent: Double) -> (top: String, bottom: String) {
+    if percent < 0 { return ("RAM", "-- GB") }
     let used = Int(round(usedGB))
     guard percent > 0 else { return ("RAM", "0 GB") }
     let total = Int(round(usedGB / (percent / 100)))

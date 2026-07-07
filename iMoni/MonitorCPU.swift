@@ -62,7 +62,13 @@ class MonitorCPU {
             &cpuInfo,
             &numCpuInfo
         )
-        guard kr == KERN_SUCCESS, let current = cpuInfo else { return }
+        guard kr == KERN_SUCCESS, let current = cpuInfo else {
+            mainQueue { [weak self] in
+                guard let self else { return }
+                self.delegate?.cpuMonitorDidFail(self)
+            }
+            return
+        }
 
         if let prev = prevCpuInfo, prevNumCpuInfo > 0 {
             var totalInUse: Int32 = 0
