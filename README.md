@@ -7,7 +7,7 @@
 
 ## 简介
 
-iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用、CPU/GPU 使用率和网络延迟稳定性。**8 个源文件，零外部依赖。**
+iMoni 是一个轻量级 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用、CPU/GPU 使用率和网络延迟稳定性。**9 个源文件，零外部依赖。**
 
 ## 特性
 
@@ -53,14 +53,15 @@ make install   # 构建 Release 并安装到 /Applications
 ```text
 iMoni/
 ├── iMoni/
-│   ├── App.swift               # 应用入口（~35行）
-│   ├── Core.swift              # 类型定义、格式化、工具函数（~70行）
-│   ├── MenuBarController.swift # 菜单栏 UI + 监控编排（~260行）
-│   ├── MonitorNetwork.swift    # 网络流量监控（~140行）
+│   ├── App.swift               # 应用入口（~37行）
+│   ├── Core.swift              # 类型定义、格式化、工具函数（~85行）
+│   ├── MenuBarController.swift # 菜单栏 UI + 监控编排（~325行）
+│   ├── MonitorNetwork.swift    # 网络流量监控（~145行）
 │   ├── MonitorMemory.swift     # 物理内存监控（~95行）
-│   ├── MonitorCPU.swift        # CPU 占用率监控（~105行）
+│   ├── MonitorCPU.swift        # CPU 占用率监控（~110行）
 │   ├── MonitorGPU.swift        # GPU 占用率监控（~85行）
-│   └── MonitorStability.swift  # 网络稳定性监控（~160行）
+│   ├── MonitorStability.swift  # 网络稳定性监控（~165行）
+│   └── TimerHelper.swift       # DispatchSourceTimer 轻量封装（~40行）
 ├── Assets.xcassets/
 └── Makefile
 ```
@@ -79,7 +80,7 @@ iMoni/
 
 ### 调度
 
-所有监控器使用 `DispatchSourceTimer` 定时触发，1 秒间隔，200ms leeway。切换模式时自动启停，不同模式互不干扰。
+所有监控器使用 `TimerHelper` 封装 `DispatchSourceTimer` 定时触发，1 秒间隔，100ms leeway。切换模式时自动启停，不同模式互不干扰。
 
 ### 渲染
 
@@ -97,6 +98,7 @@ make clean     # 清理
 
 ## 版本历史
 
+- **v1.9.0** (2026-07-31): CPU/GPU 重新合并为一种模式；精简为 4 种显示模式；首屏统一为 0，fail 显示 `--ms`/`--%`；内存标签 MEM → RAM
 - **v1.8.0** (2026-07-02): CPU/GPU 拆分为独立模式；统一 3 字母标题模板；改用 NSView 渲染对齐 Stats；Network 速度单位改为 bytes/s
 - **v1.7.0** (2026-06-29): Latency 模式改用 `www.google.com` 测速，准确反映海外可达性
 - **v1.6.0** (2026-06-28): 新增 Latency 模式，TCP ping www.gstatic.com 实时监控网络延迟/抖动/丢包率

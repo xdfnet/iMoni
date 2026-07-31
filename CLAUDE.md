@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-iMoni 是一个 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用、CPU/GPU 使用率和网络延迟稳定性。采用 Swift + AppKit 开发。**8 个源文件，零外部依赖。**
+iMoni 是一个 macOS 菜单栏系统监控工具，实时监控网络流量、内存占用、CPU/GPU 使用率和网络延迟稳定性。采用 Swift + AppKit 开发。**9 个源文件，零外部依赖。**
 
 ## 常用命令
 
@@ -17,18 +17,19 @@ make clean        # 清理构建文件
 make help         # 查看所有命令
 ```
 
-## 源文件（8 个）
+## 源文件（9 个）
 
 | 文件 | 行数 | 职责 |
 | --- | --- | --- |
-| `App.swift` | ~30 | 应用入口，`@main`，睡眠/唤醒事件转发 |
-| `Core.swift` | ~70 | 类型定义（DisplayMode），工具函数（formatSpeed, formatMemoryGB, formatCPUPercent, formatLatency, formatJitter, formatLossRate, mainQueue） |
-| `MenuBarController.swift` | ~260 | 菜单栏控制器，NSStatusItem 管理，6 个 Delegate 实现，双行 NSImage 渲染 |
-| `MonitorNetwork.swift` | ~130 | 网络流量监控，getifaddrs() 差值法，动态毛刺阈值 |
-| `MonitorMemory.swift` | ~100 | 物理内存监控，host_statistics64(HOST_VM_INFO64) |
-| `MonitorCPU.swift` | ~95 | CPU 占用率，host_processor_info() 逐核采集 |
-| `MonitorGPU.swift` | ~100 | GPU 占用率，IOKit IOAccelerator Device Utilization % |
-| `MonitorStability.swift` | ~160 | 网络稳定性监控，HEAD `www.google.com` 长连接，追踪延迟/抖动/丢包率 |
+| `App.swift` | ~37 | 应用入口，`@main`，睡眠/唤醒事件转发 |
+| `Core.swift` | ~85 | 类型定义（DisplayMode），工具函数（formatSpeed, formatMemoryGB, formatCPUPercent, formatLatency, formatJitter, formatLossRate, mainQueue） |
+| `MenuBarController.swift` | ~325 | 菜单栏控制器，NSStatusItem 管理，6 个 Delegate 实现，双行 NSView 渲染 |
+| `MonitorNetwork.swift` | ~145 | 网络流量监控，getifaddrs() 差值法，动态毛刺阈值 |
+| `MonitorMemory.swift` | ~95 | 物理内存监控，host_statistics64(HOST_VM_INFO64) |
+| `MonitorCPU.swift` | ~110 | CPU 占用率，host_processor_info() 逐核采集 |
+| `MonitorGPU.swift` | ~85 | GPU 占用率，IOKit IOAccelerator Device Utilization % |
+| `MonitorStability.swift` | ~165 | 网络稳定性监控，HEAD `www.google.com` 长连接，追踪延迟/抖动/丢包率 |
+| `TimerHelper.swift` | ~40 | DispatchSourceTimer 轻量封装，统一各 Monitor 定时器样板 |
 
 ## 显示模式 (View 菜单)
 
@@ -75,13 +76,12 @@ make help         # 查看所有命令
 
 ### 定时器
 
-所有监控器使用 `DispatchSourceTimer`（替代 `Timer`）：
+所有监控器使用 `TimerHelper` 封装 `DispatchSourceTimer`（替代 `Timer`）：
 
 ```swift
-let t = DispatchSource.makeTimerSource(queue: queue)
-t.schedule(deadline: .now(), repeating: .milliseconds(ms), leeway: .milliseconds(100))
-t.setEventHandler { [weak self] in self?.update() }
-t.activate()
+private let timer = TimerHelper()
+timer.start(queue: queue, interval: 1) { [weak self] in self?.update() }
+timer.stop()
 ```
 
 ## 配置持久化
@@ -97,7 +97,7 @@ t.activate()
 
 ## 注意事项
 
-1. 菜单栏渲染走 `NSStatusItem.button.image`，修改显示需更新 `renderImage()` 方法
+1. 菜单栏渲染走 `MenuBarView: NSView` 的 `draw(_:)` 方法，修改显示需更新 `MenuBarView` 绘制逻辑
 2. `NSMenuDelegate.menuWillOpen` 每次菜单打开前重建内容，保证状态实时更新
 3. 内存单位统一用 **二进制**（1024³），不要用十进制 GB（10⁹），否则 host_info 的总字节数对不上
 4. CPU 的 `host_processor_info` 会分配内存，每次新采集前记得 `vm_deallocate` 旧指针
