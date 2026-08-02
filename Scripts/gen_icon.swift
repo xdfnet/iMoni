@@ -7,9 +7,15 @@ try! FileManager.default.createDirectory(atPath: tmp, withIntermediateDirectorie
 
 func render(_ px: Int) -> NSImage {
     let s = CGFloat(px)
-    let img = NSImage(size: NSSize(width: s, height: s))
-    img.lockFocus()
-    let ctx = NSGraphicsContext.current!.cgContext
+    guard let rep = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: px, pixelsHigh: px,
+        bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+        colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+    ) else { fatalError("无法创建位图") }
+    rep.size = NSSize(width: s, height: s)
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
 
     // 圆角背景（macOS 图标标准圆角约 22.37%）
     let inset = s * 0.08
@@ -25,9 +31,9 @@ func render(_ px: Int) -> NSImage {
     path.addClip()
     grad.draw(in: rect, angle: -90)
 
-    // house.fill 符号，饱和天蓝，居中约 62%
+    // display.2 符号，饱和天蓝，居中约 62%
     let cfg = NSImage.SymbolConfiguration(pointSize: s * 0.62, weight: .semibold)
-    if let sym = NSImage(systemSymbolName: "house.fill", accessibilityDescription: nil)?
+    if let sym = NSImage(systemSymbolName: "display.2", accessibilityDescription: nil)?
         .withSymbolConfiguration(cfg) {
         let tinted = NSImage(size: sym.size)
         tinted.lockFocus()
@@ -43,7 +49,10 @@ func render(_ px: Int) -> NSImage {
         let dx = (s - dw)/2, dy = (s - dh)/2 + s * 0.025
         tinted.draw(in: NSRect(x: dx, y: dy, width: dw, height: dh))
     }
-    img.unlockFocus()
+    NSGraphicsContext.restoreGraphicsState()
+
+    let img = NSImage(size: NSSize(width: s, height: s))
+    img.addRepresentation(rep)
     return img
 }
 
