@@ -7,41 +7,31 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1B2C3D4E5F67890ABCDEF01 /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDCBA0987654321ABCDEF01 /* Core.swift */; };
 		0FB493F4396FB820BE4B3EE3 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB36529EA52167AA649BA1FD /* App.swift */; };
 		3A0180D06BD98C1132C2AE52 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D82B52906E1EC1492A1678 /* MenuBarController.swift */; };
 		9308B38EA8F051F3DBBA601C /* MonitorNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */; };
-		C9D4F8E3B5D7F9C1E3F5B7D9 /* MonitorMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E7D6C5B4A3F2E1D0C9B8A7 /* MonitorMemory.swift */; };
+		A1B2C3D4E5F67890ABCDEF01 /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDCBA0987654321ABCDEF01 /* Core.swift */; };
 		B2C3D4E5F6A7B8C9D0E1F2A3 /* MonitorCPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */; };
-		D4E5F6A7B8C9D0E1F2A3B4C5 /* MonitorGPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */; };
-		F6A7B8C9D0E1F2A3B4C5D6E7 /* TimerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* TimerHelper.swift */; };
+		C9D4F8E3B5D7F9C1E3F5B7D9 /* MonitorMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E7D6C5B4A3F2E1D0C9B8A7 /* MonitorMemory.swift */; };
 		D4A5B6C7D8E9F0A1B2C3D4E5 /* MonitorStability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* MonitorGPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */; };
 		DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3CC934CE62FFFAF200C3C135 /* Assets.xcassets */; };
+		F6A7B8C9D0E1F2A3B4C5D6E7 /* TimerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* TimerHelper.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		8C64789862347023FDE9299E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1A2A4CA6FE385EA3B802672F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 587493FE4D66955FDA9BF5CD;
-			remoteInfo = iMoni;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		3CC934CE62FFFAF200C3C135 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetwork.swift; sourceTree = "<group>"; };
-		B3344CEBEDD33EE2813412B9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		FEDCBA0987654321ABCDEF01 /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
-		EB36529EA52167AA649BA1FD /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
-		F5D82B52906E1EC1492A1678 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
-		F8E7D6C5B4A3F2E1D0C9B8A7 /* MonitorMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorMemory.swift; sourceTree = "<group>"; };
+		7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorStability.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorCPU.swift; sourceTree = "<group>"; };
+		B3344CEBEDD33EE2813412B9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorGPU.swift; sourceTree = "<group>"; };
 		E5F6A7B8C9D0E1F2A3B4C5D6 /* TimerHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerHelper.swift; sourceTree = "<group>"; };
-		7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorStability.swift; sourceTree = "<group>"; };
+		EB36529EA52167AA649BA1FD /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		F5D82B52906E1EC1492A1678 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		F60B6ABB8D8F37687EBA30B8 /* iMoni.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iMoni.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F8E7D6C5B4A3F2E1D0C9B8A7 /* MonitorMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorMemory.swift; sourceTree = "<group>"; };
+		FEDCBA0987654321ABCDEF01 /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -107,7 +97,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					587493FE4D66955FDA9BF5CD = {
 						ProvisioningStyle = Manual;
@@ -163,22 +153,15 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		CCD0E4AD79AC4A966D8B0C85 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 587493FE4D66955FDA9BF5CD /* iMoni */;
-			targetProxy = 8C64789862347023FDE9299E /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
 		A0D433B651E6A16C4980A086 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				COMBINE_HIDPI_IMAGES = YES;
 				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_TESTING_SEARCH_PATHS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -187,7 +170,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-
 				MARKETING_VERSION = 1.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
@@ -233,6 +215,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -257,6 +240,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -300,6 +284,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -317,6 +302,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -328,8 +314,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				COMBINE_HIDPI_IMAGES = YES;
 				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_TESTING_SEARCH_PATHS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -338,7 +325,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-
 				MARKETING_VERSION = 1.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = David.iMoni;
 				SDKROOT = macosx;
