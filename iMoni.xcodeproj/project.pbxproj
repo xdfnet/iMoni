@@ -16,11 +16,13 @@
 		D4A5B6C7D8E9F0A1B2C3D4E5 /* MonitorStability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */; };
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* MonitorGPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* MonitorGPU.swift */; };
 		DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3CC934CE62FFFAF200C3C135 /* Assets.xcassets */; };
+		AA1000020000000000000002 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AA1000010000000000000001 /* AppIcon.icon */; };
 		F6A7B8C9D0E1F2A3B4C5D6E7 /* TimerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* TimerHelper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		3CC934CE62FFFAF200C3C135 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA1000010000000000000001 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorNetwork.swift; sourceTree = "<group>"; };
 		7C8D9E0F1A2B3C4D5E6F7A8B /* MonitorStability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorStability.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* MonitorCPU.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorCPU.swift; sourceTree = "<group>"; };
@@ -41,6 +43,7 @@
 				FEDCBA0987654321ABCDEF01 /* Core.swift */,
 				EB36529EA52167AA649BA1FD /* App.swift */,
 				3CC934CE62FFFAF200C3C135 /* Assets.xcassets */,
+				AA1000010000000000000001 /* AppIcon.icon */,
 				B3344CEBEDD33EE2813412B9 /* Info.plist */,
 				F5D82B52906E1EC1492A1678 /* MenuBarController.swift */,
 				3F74F6DFAF891C89EAFA81CC /* MonitorNetwork.swift */,
@@ -129,6 +132,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DB3D33F7E0824CFA0B0DC28B /* Assets.xcassets in Resources */,
+				AA1000020000000000000002 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
