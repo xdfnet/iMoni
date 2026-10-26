@@ -88,6 +88,18 @@ timer.stop()
 
 - `UserDefaults`：`displayMode`（当前显示模式）
 
+## App 图标
+
+图案是 SF Symbols 的 `display.2`（双屏）。
+
+一处设计，两处产物（都由 `Scripts/gen_icon.swift` 生成，产物提交进仓库）：
+- `iMoni/AppIcon.icon` —— macOS 26+ 的新格式，三层图层：**浅色**（深蓝）/
+  **深色**（亮蓝）/ **单色**（白，由系统着色），靠 `opacity-specializations`
+  按当前外观与「图标风格」自动切换
+- `iMoni/Assets.xcassets/AppIcon.appiconset` —— 旧版 macOS 的兜底（圆角渐变底 + 蓝符号）
+
+图案占画布比例、垂直偏移、两个蓝色常量都在 `gen_icon.swift` 顶部。
+
 ## 架构特点
 
 - **代理模式**：`MonitorNetworkDelegate`, `MonitorMemoryDelegate`, `MonitorCPUDelegate`, `MonitorGPUDelegate`, `MonitorStabilityDelegate`
